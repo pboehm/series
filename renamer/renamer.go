@@ -5,16 +5,44 @@ import (
     "path"
     "io/ioutil"
     "regexp"
+    "github.com/pboehm/series/util"
 )
 
-var Patterns = []string {
+var Patterns = []*regexp.Regexp {
     // S01E01
-    "^(?i)(?P<series>.*)S(?P<season>\\d+)E(?P<episode>\\d+)(?P<episodename>.*)$",
+    regexp.MustCompile(
+        "^(?i)(?P<series>.*)S(?P<season>\\d+)E(?P<episode>\\d+)(?P<episodename>.*)$"),
+
     // 101; 1212
-    "^(?i)(?P<series>.*\\D)(?P<season>\\d+)(?P<episode>\\d{2})(?P<episodename>\\W*.*)$",
+    regexp.MustCompile(
+        "^(?i)(?P<series>.*\\D)(?P<season>\\d+)(?P<episode>\\d{2})(?P<episodename>\\W*.*)$"),
+
     // 1x1; 12x12
-    "^(?i)(?P<series>.*)(?P<season>\\d+)x(?P<episode>\\d+)(?P<episodename>.*)$",
+    regexp.MustCompile(
+        "^(?i)(?P<series>.*)(?P<season>\\d+)x(?P<episode>\\d+)(?P<episodename>.*)$"),
 }
+
+
+func IsInterestingDirEntry(entry string) bool {
+    for _, pattern := range Patterns {
+        _, matched := util.NamedCaptureGroups(pattern, entry)
+        if matched {
+            return true
+        }
+    }
+    return false
+}
+
+func ExtractEpisodeInformation(entry string) map[string]string {
+    for _, pattern := range Patterns {
+        groups, matched := util.NamedCaptureGroups(pattern, entry)
+        if matched {
+            return groups
+        }
+    }
+    return nil
+}
+
 
 func GetDirtyFiles() []string {
     content, _ := ioutil.ReadDir(path.Join(GetHomeDirectory(), "Downloads"))
@@ -29,15 +57,6 @@ func GetDirtyFiles() []string {
     return entries
 }
 
-func IsInterestingDirEntry(entry string) bool {
-    for _, pattern := range Patterns {
-        re := regexp.MustCompile(pattern)
-        if re.Match([]byte(entry)) {
-            return true
-        }
-    }
-    return false
-}
 
 func GetHomeDirectory() string {
     return os.Getenv("HOME")
