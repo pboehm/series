@@ -12,3 +12,7 @@ func PathExists(path string) (bool) {
     }
     return false
 }
+
+func HomeDirectory() string {
+    return os.Getenv("HOME")
+}

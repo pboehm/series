@@ -1,11 +1,11 @@
 package renamer
 
 import (
-    "os"
     "path"
     "io/ioutil"
     "regexp"
     "github.com/pboehm/series/util"
+    "strings"
 )
 
 var Patterns = []*regexp.Regexp {
@@ -43,9 +43,12 @@ func ExtractEpisodeInformation(entry string) map[string]string {
     return nil
 }
 
+func CleanEpisodeInformation(info string) string {
+    return strings.TrimSpace(strings.Replace(info, ".", " ", -1))
+}
 
 func GetDirtyFiles() []string {
-    content, _ := ioutil.ReadDir(path.Join(GetHomeDirectory(), "Downloads"))
+    content, _ := ioutil.ReadDir(path.Join(util.HomeDirectory(), "Downloads"))
 
     var entries []string
     for _, entry := range content {
@@ -57,7 +60,3 @@ func GetDirtyFiles() []string {
     return entries
 }
 
-
-func GetHomeDirectory() string {
-    return os.Getenv("HOME")
-}

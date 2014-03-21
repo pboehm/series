@@ -23,8 +23,9 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
     information := ExtractEpisodeInformation(basename)
     episode.season, _  = strconv.Atoi(information["season"])
     episode.episode, _ = strconv.Atoi(information["episode"])
-    episode.series, _  = information["series"]
-    episode.name, _    = information["episodename"]
+
+    episode.series = CleanEpisodeInformation(information["series"])
+    episode.name   = CleanEpisodeInformation(information["episodename"])
 
     return episode, nil
 }
