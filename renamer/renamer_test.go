@@ -47,14 +47,14 @@ func (s *MySuite) FileWithPath(key string) string {
 }
 
 func (s *MySuite) TestEnvironment(c *C) {
-    c.Check(util.PathExists(s.dir), Equals, true)
-    c.Check(util.PathExists(s.FileWithPath("royal")), Equals, true)
+    c.Assert(util.PathExists(s.dir), Equals, true)
+    c.Assert(util.PathExists(s.FileWithPath("royal")), Equals, true)
 }
 
 func (s *MySuite) TestEpisodeInformationCleanup(c *C) {
-    c.Check(CleanEpisodeInformation("Criminal.Minds"),
+    c.Assert(CleanEpisodeInformation("Criminal.Minds"),
         Equals, "Criminal Minds")
-    c.Check(CleanEpisodeInformation(".Criminal.Minds "),
+    c.Assert(CleanEpisodeInformation(".Criminal.Minds "),
         Equals, "Criminal Minds")
 }
 
@@ -77,7 +77,7 @@ func (s *MySuite) TestInterestingFiles(c *C) {
     }
 
     for key, val := range TestData {
-        c.Check(IsInterestingDirEntry(key), Equals, val,
+        c.Assert(IsInterestingDirEntry(key), Equals, val,
                 Commentf("IsInterestingDirEntry(%s) should be %v", key, val))
     }
 }
