@@ -5,6 +5,7 @@ import (
     "github.com/pboehm/series/util"
     "errors"
     "path/filepath"
+    GlobalPath "path"
     "strconv"
 )
 
@@ -25,16 +26,24 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
     episode.episode, _ = strconv.Atoi(information["episode"])
 
     episode.series = CleanEpisodeInformation(information["series"])
-    episode.name   = CleanEpisodeInformation(information["episodename"])
+
+    name := information["episodename"]
+    if util.IsFile(path) {
+        episode.extension = GlobalPath.Ext(basename)
+        name = name[:len(name) - len(episode.extension)]
+    }
+
+    episode.name   = CleanEpisodeInformation(name)
 
     return episode, nil
 }
 
 type Episode struct {
     season, episode int
-    name, series string
+    name, series, extension string
 }
 
 func (self Episode) CleanedFileName() string {
-    return fmt.Sprintf("S%02dE%02d - %s", self.season, self.episode, self.name)
+    return fmt.Sprintf("S%02dE%02d - %s%s",
+                self.season, self.episode, self.name, self.extension)
 }
