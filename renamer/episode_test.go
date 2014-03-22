@@ -37,3 +37,12 @@ func (s *MySuite) TestEpisodeExtractionFromNotExistingFile(c *C) {
 
     c.Assert(err, ErrorMatches, "Supplied episode does not exist")
 }
+
+func (s *MySuite) TestEpisodeTrashwordRemoval(c *C) {
+    episode, _ := CreateEpisodeFromPath(s.FileWithPath("flpo2"))
+
+    c.Assert(episode.name, Equals,
+        "Die German Erinnerungen German Dubbed BLURAYRiP")
+    episode.RemoveTrashwords()
+    c.Assert(episode.name, Equals, "Die German Erinnerungen")
+}

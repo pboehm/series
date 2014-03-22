@@ -28,7 +28,7 @@ func (s *MySuite) SetUpTest(c *C) {
         "unknown_series": "5x12.avi",
         "royal": "Royal.Pains.S02E10.Beziehungsbeschwerden.GERMAN.DUBBED.avi",
         "flpo1": "Flashpoint.S04E04.Getruebte.Erinnerungen.German.Dubbed.avi",
-        "flpo2": "flpo.404.Die.German.Erinnerungen.German.Dubbed.avi",
+        "flpo2": "flpo.404.Die.German.Erinnerungen.German.Dubbed.BLURAYRiP.avi",
         "csi": "sof-csi.ny.s07e20.avi",
 
         // sample illegal data

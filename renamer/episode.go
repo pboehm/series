@@ -43,7 +43,11 @@ type Episode struct {
     name, series, extension string
 }
 
-func (self Episode) CleanedFileName() string {
+func (self *Episode) CleanedFileName() string {
     return fmt.Sprintf("S%02dE%02d - %s%s",
                 self.season, self.episode, self.name, self.extension)
+}
+
+func (self *Episode) RemoveTrashwords() {
+    self.name = ApplyTrashwordsOnString(self.name)
 }
