@@ -3,6 +3,7 @@ package renamer
 import (
     . "launchpad.net/gocheck"
     "path"
+    "github.com/pboehm/series/util"
 )
 
 func (s *MySuite) TestEpisodeStruct(c *C) {
@@ -78,3 +79,22 @@ func (s *MySuite) TestEpisodeTrashwordRemoval(c *C) {
     episode.RemoveTrashwords()
     c.Assert(episode.name, Equals, "Die German Erinnerungen")
 }
+
+func (s *MySuite) TestEpisodeRenamingEpisodeFile(c *C) {
+    episode, _ := CreateEpisodeFromPath(s.FileWithPath("chuck1"))
+    c.Assert(episode.CanBeRenamed(), Equals, true)
+    episode.Rename(s.dir)
+    c.Assert(util.PathExists(path.Join(s.dir, episode.CleanedFileName())),
+             Equals, true)
+    c.Assert(util.PathExists(s.FileWithPath("chuck1")), Equals, false)
+}
+
+func (s *MySuite) TestEpisodeRenamingFromDir(c *C) {
+    episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi_dir"))
+    c.Assert(episode.CanBeRenamed(), Equals, true)
+    episode.Rename(s.dir)
+    c.Assert(util.PathExists(path.Join(s.dir, episode.CleanedFileName())),
+             Equals, true)
+    c.Assert(util.PathExists(s.FileWithPath("crmi_dir")), Equals, false)
+}
+

@@ -7,6 +7,7 @@ import (
     "path/filepath"
     GlobalPath "path"
     "strconv"
+    "os"
 )
 
 func CreateEpisodeFromPath(path string) (*Episode, error) {
@@ -21,6 +22,7 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
         return episode, errors.New("Supplied episode has no series information")
     }
 
+    episode.path = path
     episode.episodefile = path
     if util.IsDirectory(path) {
         episodefile, err := FindBiggestVideoFile(path)
@@ -53,7 +55,7 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 
 type Episode struct {
     season, episode int
-    name, series, extension, episodefile string
+    name, series, extension, episodefile, path string
 }
 
 func (self *Episode) CleanedFileName() string {
@@ -71,4 +73,27 @@ func (self *Episode) CanBeRenamed() bool {
 
 func (self *Episode) RemoveTrashwords() {
     self.name = ApplyTrashwordsOnString(self.name)
+}
+
+func (self *Episode) Rename(dest_path string) error {
+    if ! self.CanBeRenamed() {
+        return errors.New(
+            "This episode couldn't be renamed as it has some problems")
+    }
+
+    need_cleanup := false
+    if util.IsDirectory(self.path) {
+        need_cleanup = true
+    }
+
+    dest := GlobalPath.Join(dest_path, self.CleanedFileName())
+
+    err := os.Rename(self.episodefile, dest)
+    if err != nil { return err }
+
+    if need_cleanup {
+        return os.RemoveAll(self.path)
+    }
+
+    return nil
 }
