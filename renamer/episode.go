@@ -61,12 +61,12 @@ func (self *Episode) CleanedFileName() string {
                 self.season, self.episode, self.name, self.extension)
 }
 
-func (self *Episode) CanBeRenamed() bool {
-    if self.name != "" && util.IsFile(self.episodefile) {
-        return true
-    }
+func (self *Episode) HasValidEpisodeName() bool {
+    return self.name != ""
+}
 
-    return false
+func (self *Episode) CanBeRenamed() bool {
+    return self.HasValidEpisodeName() && util.IsFile(self.episodefile)
 }
 
 func (self *Episode) RemoveTrashwords() {

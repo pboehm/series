@@ -47,6 +47,7 @@ func (s *MySuite) TestEpisodeExtractionFromDirectory(c *C) {
 func (s *MySuite) TestEpisodeThatShouldntBeRenamable(c *C) {
     episode, _ := CreateEpisodeFromPath(s.FileWithPath("unknown_series"))
     c.Assert(episode.CanBeRenamed(), Equals, false)
+    c.Assert(episode.HasValidEpisodeName(), Equals, false)
 }
 
 func (s *MySuite) TestEpisodeExtractionFromInvalidFile(c *C) {
