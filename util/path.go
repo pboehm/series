@@ -21,6 +21,14 @@ func IsFile(path string) (bool) {
     return false
 }
 
+func IsDirectory(path string) (bool) {
+    stat, err := os.Stat(path)
+    if err == nil && stat.Mode().IsDir() {
+        return true
+    }
+    return false
+}
+
 func HomeDirectory() string {
     return os.Getenv("HOME")
 }

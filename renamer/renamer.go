@@ -7,6 +7,9 @@ import (
     "github.com/pboehm/series/util"
     "strings"
     "fmt"
+    "errors"
+    "path/filepath"
+    "os"
 )
 
 var Patterns = []*regexp.Regexp {
@@ -23,6 +26,10 @@ var Patterns = []*regexp.Regexp {
         "^(?i)(?P<series>.*)(?P<season>\\d+)x(?P<episode>\\d+)(?P<episodename>.*)$"),
 }
 
+var VideoFileEndings = []string {
+    "mpg", "mpeg", "avi", "mkv", "wmv", "mp4", "mov", "flv", "3gp", "ts",
+}
+
 var TrashWords = []string {
     "German", "Dubbed", "DVDRip", "HDTVRip", "XviD", "ITG", "TVR", "inspired",
     "HDRip", "AMBiTiOUS", "RSG", "SiGHT", "SATRip", "WS", "TVS", "RiP", "READ",
@@ -32,6 +39,59 @@ var TrashWords = []string {
     "Repack", "SiMPTY", "BLURAYRiP", "BluRay", "DELiCiOUS", "Synced",
     "UNDELiCiOUS", "fBi", "CiD", "iTunesHDRip", "RedSeven", "OiNK", "idTV",
     "DL", "DD51", "AC3", "1080p",
+}
+
+func HasVideoFileEnding(entry_path string) (bool) {
+    extension := path.Ext(entry_path)
+
+    if extension == "" {
+        return false
+    } else {
+        extension = extension[1:]
+        matched := false
+
+        for _, ending := range VideoFileEndings {
+            if ending == extension {
+                matched = true
+                break
+            }
+        }
+
+        return matched
+    }
+}
+
+func FindBiggestVideoFile(dir string) (string, error) {
+    if ! util.IsDirectory(dir) {
+        return "", errors.New("The supplied directory does not exist")
+    }
+
+    var videofile string
+    var videofile_size int64
+
+    walker := func(entry_path string, info os.FileInfo, err error) error {
+        if info.IsDir() || ! HasVideoFileEnding(entry_path) {
+            return nil
+        }
+
+        if info.Size() > videofile_size {
+            videofile = entry_path
+            videofile_size = info.Size()
+        }
+
+        return nil
+    }
+
+    err := filepath.Walk(dir, walker)
+    if err != nil {
+        panic(err)
+    }
+
+    if videofile == "" {
+        return "", errors.New("No videofile available")
+    }
+
+    return videofile, nil
 }
 
 func ApplyTrashwordsOnString(str string) string {

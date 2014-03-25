@@ -6,6 +6,7 @@ import (
     "testing"
     "path"
     "os"
+    "io/ioutil"
 )
 
 // Hook up gocheck into the "go test" runner.
@@ -14,41 +15,99 @@ var _ = Suite(&MySuite{})
 
 type MySuite struct{
     dir string
+    fixtures map[string]EpisodeFixture
+}
+
+type EpisodeFixture struct {
+    path string
+    dir bool
     files map[string]string
+}
+
+func createFile(path string, content string) {
+    _ = ioutil.WriteFile(path, []byte(content), 0644)
 }
 
 func (s *MySuite) SetUpTest(c *C) {
     s.dir = c.MkDir()
-    s.files = map[string]string {
-        "crmi":   "Criminal.Minds.S01E01.Testtest.mkv",
-        "chuck1": "Chuck.S01E01.Dies.ist.ein.Test.German.Dubbed.BLURAYRiP.mkv",
-        "chuck2": "chuck.512.hdtv-lol.avi",
-        "chuck3": "chuck.1212.hdtv-lol.avi",
-        "chuck4": "chuck.5x12.hdtv-lol.avi",
-        "unknown_series": "5x12.avi",
-        "royal": "Royal.Pains.S02E10.Beziehungsbeschwerden.GERMAN.DUBBED.avi",
-        "flpo1": "Flashpoint.S04E04.Getruebte.Erinnerungen.German.Dubbed.avi",
-        "flpo2": "flpo.404.Die.German.Erinnerungen.German.Dubbed.BLURAYRiP.avi",
-        "csi": "sof-csi.ny.s07e20.avi",
+    s.fixtures = map[string]EpisodeFixture {
+        "crmi":   {
+            "Criminal.Minds.S01E01.Testtest.mkv",
+            false, map[string]string {}, },
+        "crmi_no_video":   {
+            "Criminal.Minds.S01E01.Testtest.pdf",
+            false, map[string]string {}, },
+        "chuck1": {
+            "Chuck.S01E01.Dies.ist.ein.Test.German.Dubbed.BLURAYRiP.mkv",
+            false, map[string]string {}, },
+        "chuck2": {
+            "chuck.512.hdtv-lol.avi",
+            false, map[string]string {}, },
+        "chuck3": {
+            "chuck.1212.hdtv-lol.avi",
+            false, map[string]string {}, },
+        "chuck4": {
+            "chuck.5x12.hdtv-lol.avi",
+            false, map[string]string {}, },
+        "unknown_series": {
+            "5x12.avi",
+            false, map[string]string {}, },
+        "royal": {
+            "Royal.Pains.S02E10.Beziehungsbeschwerden.GERMAN.DUBBED.avi",
+            false, map[string]string {}, },
+        "flpo1": {
+            "Flashpoint.S04E04.Getruebte.Erinnerungen.German.Dubbed.avi",
+            false, map[string]string {}, },
+        "flpo2": {
+            "flpo.404.Die.German.Erinnerungen.German.Dubbed.BLURAYRiP.avi",
+            false, map[string]string {}, },
+        "csi": {
+            "sof-csi.ny.s07e20.avi",
+            false, map[string]string {}, },
 
         // sample illegal data
-        "illegal1": ".DS_Store",
-        "illegal2": "Test",
+        "illegal1":  {
+            ".DS_Store", false, map[string]string {}, },
+        "illegal2": {
+            "Test", false, map[string]string {}, },
+
+        // sample directory data
+        "crmi_dir":   {
+            "Criminal.Minds.S01E01.Testtest",
+            true, map[string]string {
+                "episode.mkv": "abcksfvfddvhfjvdhfvjdhfv",
+                "sample.mkv": "probablyshorter",
+                "episode.sub": "ttttttttttttttttttttttttttttttttttttttttttt",
+            },},
+        "chuck1_dir": {
+            "Chuck.S01E01.Dies.ist.ein.Test.German.Dubbed.BLURAYRiP",
+            true, map[string]string {}, },
     }
 
-    for key, _ := range s.files {
-        file, _ := os.Create(s.FileWithPath(key))
-        file.Close()
+
+    for key, fixture := range s.fixtures {
+        if fixture.dir {
+            os.Mkdir(s.FileWithPath(key), 0700)
+            for file, content := range fixture.files {
+                createFile(path.Join(s.FileWithPath(key), file), content)
+            }
+
+        } else {
+            createFile(s.FileWithPath(key), "")
+        }
     }
 }
 
 func (s *MySuite) FileWithPath(key string) string {
-    return path.Join(s.dir, s.files[key])
+    return path.Join(s.dir, s.fixtures[key].path)
 }
 
 func (s *MySuite) TestEnvironment(c *C) {
     c.Assert(util.PathExists(s.dir), Equals, true)
     c.Assert(util.PathExists(s.FileWithPath("royal")), Equals, true)
+    c.Assert(util.PathExists(s.FileWithPath("crmi_dir")), Equals, true)
+    c.Assert(util.PathExists(
+        path.Join(s.FileWithPath("crmi_dir"), "episode.mkv")), Equals, true)
 }
 
 func (s *MySuite) TestEpisodeInformationCleanup(c *C) {
