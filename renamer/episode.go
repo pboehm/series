@@ -67,6 +67,10 @@ func (self *Episode) HasValidEpisodeName() bool {
     return self.name != ""
 }
 
+func (self *Episode) SetDefaultEpisodeName() {
+    self.name = fmt.Sprintf("Episode %02d", self.episode)
+}
+
 func (self *Episode) CanBeRenamed() bool {
     return self.HasValidEpisodeName() && util.IsFile(self.episodefile)
 }

@@ -2,7 +2,6 @@ package renamer
 
 import (
     "path"
-    "io/ioutil"
     "regexp"
     "github.com/pboehm/series/util"
     "strings"
@@ -150,17 +149,3 @@ func ExtractEpisodeInformation(entry string) map[string]string {
 func CleanEpisodeInformation(info string) string {
     return strings.TrimSpace(strings.Replace(info, ".", " ", -1))
 }
-
-func GetDirtyFiles() []string {
-    content, _ := ioutil.ReadDir(path.Join(util.HomeDirectory(), "Downloads"))
-
-    var entries []string
-    for _, entry := range content {
-        if IsInterestingDirEntry(entry.Name()) {
-            entries = append(entries, entry.Name())
-        }
-    }
-
-    return entries
-}
-
