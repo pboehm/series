@@ -80,6 +80,13 @@ func (s *MySuite) TestEpisodeTrashwordRemoval(c *C) {
     c.Assert(episode.name, Equals, "Die German Erinnerungen")
 }
 
+func (s *MySuite) TestEpisodeTrashwordRemovalSkipAfterTwoPurges(c *C) {
+    episode, _ := CreateEpisodeFromPath(s.FileWithPath("ncis"))
+    episode.RemoveTrashwords()
+
+    c.Assert(episode.name, Equals, "Gueterzug nach Miami")
+}
+
 func (s *MySuite) TestEpisodeRenamingEpisodeFile(c *C) {
     episode, _ := CreateEpisodeFromPath(s.FileWithPath("chuck1"))
     c.Assert(episode.CanBeRenamed(), Equals, true)

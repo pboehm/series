@@ -102,6 +102,7 @@ func ApplyTrashwordsOnString(str string) string {
     SplittedLoop:
     for _, word := range splitted {
         if word == "" { continue SplittedLoop }
+        if purge_count > 2 { break }
 
         word_pattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", word))
 

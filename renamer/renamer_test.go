@@ -55,6 +55,9 @@ func (s *MySuite) SetUpTest(c *C) {
         "royal": {
             "Royal.Pains.S02E10.Beziehungsbeschwerden.GERMAN.DUBBED.avi",
             false, map[string]string {}, },
+        "ncis": {
+            "NCIS.S11E13.Gueterzug.nach.Miami.GERMAN.DUBBED.DL.720p.WebHD.h264-euHD.mkv",
+            false, map[string]string {}, },
         "flpo1": {
             "Flashpoint.S04E04.Getruebte.Erinnerungen.German.Dubbed.avi",
             false, map[string]string {}, },
