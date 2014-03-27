@@ -8,10 +8,21 @@ import (
     "path"
     "os"
     "regexp"
+    "flag"
 )
 
 func main() {
+    // parse command flags/args
+    FlagRenameFiles := flag.Bool("rename", true, "should the files be renamed")
+
+    flag.Parse()
+    argv := flag.Args()
+
+    // change to the series directory
     dir := path.Join(util.HomeDirectory(), "Downloads")
+    if len(argv) > 0 {
+        dir = argv[0]
+    }
 
     err := os.Chdir(dir)
     if err != nil { panic(err) }
@@ -19,6 +30,7 @@ func main() {
     content, err := ioutil.ReadDir(".")
     if err != nil { panic(err) }
 
+    // handle all files that are interesting and not already in the right format
     valid_regex := regexp.MustCompile("^S\\d+E\\d+.-.\\w+.*\\.\\w+$")
 
     for _, entry := range content {
@@ -46,9 +58,13 @@ func main() {
             continue
         }
 
-        rename_err := episode.Rename(".")
-        if rename_err != nil { panic(rename_err) }
+        if *FlagRenameFiles {
+            rename_err := episode.Rename(".")
+            if rename_err != nil { panic(rename_err) }
 
-        fmt.Println("--> episode has been renamed succesfully\n")
+            fmt.Println("--> episode has been renamed succesfully")
+        }
+
+        fmt.Println("")
     }
 }
