@@ -118,6 +118,8 @@ func (s *MySuite) TestEpisodeInformationCleanup(c *C) {
         Equals, "Criminal Minds")
     c.Assert(CleanEpisodeInformation(".Criminal.Minds "),
         Equals, "Criminal Minds")
+    c.Assert(CleanEpisodeInformation("GERMAN.DUBBED.DL.WEB-DL"),
+        Equals, "GERMAN DUBBED DL WEB DL")
 }
 
 func (s *MySuite) TestInterestingFiles(c *C) {

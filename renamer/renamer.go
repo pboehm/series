@@ -148,5 +148,8 @@ func ExtractEpisodeInformation(entry string) map[string]string {
 }
 
 func CleanEpisodeInformation(info string) string {
-    return strings.TrimSpace(strings.Replace(info, ".", " ", -1))
+    return strings.TrimSpace(
+                strings.Replace(
+                    strings.Replace(info, "-", " ", -1),
+                        ".", " ", -1))
 }
