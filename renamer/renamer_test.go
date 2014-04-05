@@ -82,6 +82,18 @@ func (s *MySuite) SetUpTest(c *C) {
                 "sample.mkv": "probablyshorter",
                 "episode.sub": "ttttttttttttttttttttttttttttttttttttttttttt",
             },},
+        "himym":   {
+            "HMM8p.909",
+            true, map[string]string {
+                "How.I.Met.Your.Mother.S09E09.Platonish.1080p.WEB-DL.DD5.mkv":
+                    "abcksfvfddvhfjvdhfvjdhfv",
+            },},
+        "himym_not_matching":   {
+            "HIMYM.909",
+            true, map[string]string {
+                "How.I.Met.Your.Mother.S09E10.Platonish.1080p.WEB-DL.DD5.mkv":
+                    "abcksfvfddvhfjvdhfvjdhfv",
+            },},
         "chuck1_dir": {
             "Chuck.S01E01.Dies.ist.ein.Test.German.Dubbed.BLURAYRiP",
             true, map[string]string {}, },

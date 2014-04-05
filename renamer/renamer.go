@@ -37,7 +37,7 @@ var TrashWords = []string {
     "CRiSP", "euHD", "WEBRiP", "ZZGtv", "ARCHiV", "DD20", "Prim3time", "Nfo",
     "Repack", "SiMPTY", "BLURAYRiP", "BluRay", "DELiCiOUS", "Synced",
     "UNDELiCiOUS", "fBi", "CiD", "iTunesHDRip", "RedSeven", "OiNK", "idTV",
-    "DL", "DD51", "AC3", "1080p",
+    "DL", "DD51", "AC3", "1080p", "WEB", "DD5",
 }
 
 func HasVideoFileEnding(entry_path string) (bool) {

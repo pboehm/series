@@ -50,6 +50,27 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
     }
     episode.name = CleanEpisodeInformation(name)
 
+    // check if the episodefile contains more informations than we already have
+    // and set these informations
+    if util.IsDirectory(path) {
+        subepisode, suberr := CreateEpisodeFromPath(episode.episodefile)
+        if suberr == nil {
+            subepisode.RemoveTrashwords()
+
+            if episode.season == subepisode.season &&
+                    episode.episode == subepisode.episode {
+
+                if len(subepisode.series) > len(episode.series) {
+                    episode.series = subepisode.series
+                }
+
+                if len(subepisode.name) > len(episode.name) {
+                    episode.name = subepisode.name
+                }
+            }
+        }
+    }
+
     return episode, nil
 }
 
