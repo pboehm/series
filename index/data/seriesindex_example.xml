@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE seriesindex SYSTEM "res/seriesindex.dtd">
+
+<seriesindex>
+    <series name="Community">
+        <alias to="Comm" />
+        <alias to="unity" />
+        <episodes>
+            <episode name="S01E01 - Zurück aufs College.avi" />
+            <episode name="S01E02 - Grundkurs Spanisch.avi" />
+            <episode name="S01E03 - Carpe Diem.avi" />
+            <episode name="S01E04 - Bitte warten.avi" />
+            <episode name="S01E05 - Prozess im Schwimmbad.avi" />
+            <episode name="S01E06 - Toiletten Talk.avi" />
+            <episode name="S01E07 - Mexanisches Halloween.avi" />
+            <episode name="S01E08 - Picknick unter Sternen.avi" />
+            <episode name="S01E09 - Der Mensch ist gut.avi" />
+            <episode name="S01E10 - Green Day für Arme.avi" />
+            <episode name="S01E11 - Das P Wort.avi" />
+            <episode name="S01E12 - Die Weihnachtsschlacht.avi" />
+            <episode name="S01E13 - Zweite Wahl.avi" />
+            <episode name="S01E14 - Echte Männer tanzen nicht.avi" />
+            <episode name="S01E15 - Jeder mit jedem.avi" />
+            <episode name="S01E16 - Trunken am Telefon.avi" />
+            <episode name="S01E17 - Billard ohne.mkv" />
+            <episode name="S01E18 - Familientag.mkv" />
+            <episode name="S01E19 - Die Parkplatzsegler.mkv" />
+            <episode name="S01E20 - Die Spassbremse.mkv" />
+        </episodes>
+    </series>
+    <series name="Shameless US">
+        <episodes lang="de">
+            <episode name="S01E01 - Pilot.avi" />
+            <episode name="S01E02 - Frank The Plank.avi" />
+            <episode name="S01E03 - Der Scheck heiligt die Mittel.avi" />
+            <episode name="S01E04 - Nur mal Spielen.avi" />
+            <episode name="S01E05 - Drei Freunde.avi" />
+            <episode name="S01E06 - Killer Carl.avi" />
+            <episode name="S01E07 - Frank Gallagher Loving Husband Devoted Father.avi" />
+            <episode name="S01E08 - Katerstimmung.avi" />
+        </episodes>
+        <episodes lang="en">
+            <episode name="S01E01 - Pilot.avi" />
+            <episode name="S01E02 - Frank The Plank.avi" />
+            <episode name="S01E03 - Der Scheck heiligt die Mittel.avi" />
+            <episode name="S01E04 - Nur mal Spielen.avi" />
+            <episode name="S01E05 - Drei Freunde.avi" />
+            <episode name="S01E06 - Killer Carl.avi" />
+            <episode name="S01E07 - Frank Gallagher Loving Husband Devoted Father.avi" />
+            <episode name="S01E08 - Katerstimmung.avi" />
+            <episode name="S01E09 - But At Last Came A Knock.avi" />
+            <episode name="S01E10 - Auf Oma ist verlass.avi" />
+            <episode name="S01E11 - Daddys Girl.avi" />
+            <episode name="S01E12 - Vater Frank voller Gnade.avi" />
+            <episode name="S02E01 - Summertime.avi" />
+            <episode name="S02E02 - Summer Loving.avi" />
+            <episode name="S02E03 - Ill Light A Candle For You Every Day.avi" />
+            <episode name="S02E04 - A Beautiful Mess.avi" />
+            <episode name="S02E05 - Fathers Day.avi" />
+            <episode name="S02E06 - Can I Have A Mother.avi" />
+            <episode name="S02E07 - A Bottle of Jean Nate.avi" />
+            <episode name="S02E08 - Parenthood.avi" />
+            <episode name="S02E09 - Hurricane Monica.avi" />
+            <episode name="S02E10 - A Great Cause.mkv" />
+            <episode name="S02E11 - Just Like The Pilgrims Intended.mkv" />
+        </episodes>
+    </series>
+    <series name="Prison Break" receive_updates="false">
+        <episodes>
+            <episode name="S01E01 - Zurück aufs College.avi" />
+            <episode name="S01E02 - Grundkurs Spanisch.avi" />
+            <episode name="S01E03 - Carpe Diem.avi" />
+            <episode name="S01E04 - Bitte warten.avi" />
+        </episodes>
+    </series>
+    <series name="The Big Bang Theory">
+        <episodes>
+            <episode name="S06E01 - do not change.avi" all_before="true"/>
+            <episode name="S06E02 - Grundkurs Spanisch.avi" />
+            <episode name="S06E03 - Carpe Diem.avi" />
+            <episode name="S06E04 - Bitte warten.avi" />
+        </episodes>
+    </series>
+</seriesindex>
