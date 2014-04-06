@@ -12,10 +12,13 @@ var _ = Suite(&MySuite{})
 
 type MySuite struct{
     dir string
+    index *SeriesIndex
+    err error
 }
 
 func (s *MySuite) SetUpTest(c *C) {
     s.dir = c.MkDir()
+    s.index, s.err = ParseSeriesIndex("data/seriesindex_example.xml")
 }
 
 func (s *MySuite) TestEnvironment(c *C) {
@@ -23,8 +26,11 @@ func (s *MySuite) TestEnvironment(c *C) {
 }
 
 func (s *MySuite) TestIndexParsing(c *C) {
-    index, err := ParseSeriesIndex("data/seriesindex_example.xml")
+    c.Assert(s.index, NotNil)
+    c.Assert(s.err, IsNil)
+    c.Assert(s.index.SeriesList, HasLen, 4)
 
-    c.Assert(index, NotNil)
-    c.Assert(err, IsNil)
+    c.Assert(s.index.SeriesMap, HasLen, 6)
+    c.Assert(s.index.SeriesMap["Community"], Equals, s.index.SeriesMap["Comm"])
+    c.Assert(s.index.SeriesMap["Community"].Name, Equals, "Community")
 }

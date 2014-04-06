@@ -10,6 +10,7 @@ import (
 type SeriesIndex struct {
     XMLName xml.Name `xml:"seriesindex"`
     SeriesList []Series `xml:"series"`
+    SeriesMap map[string]*Series
 }
 
 func ParseSeriesIndex(xmlpath string) (*SeriesIndex, error) {
@@ -24,6 +25,19 @@ func ParseSeriesIndex(xmlpath string) (*SeriesIndex, error) {
     content, err := ioutil.ReadAll(xmlFile)
 
 	xml.Unmarshal([]byte(content), &index)
+
+    // Build up the series map that holds references to series under the series
+    // name and all aliases
+    index.SeriesMap = map[string]*Series {}
+
+    for i := 0; i < len(index.SeriesList); i++ {
+        series := &(index.SeriesList[i])
+        index.SeriesMap[series.Name] = series
+
+        for _, alias := range series.Aliases {
+            index.SeriesMap[alias.To] = series
+        }
+    }
 
 	return &index, nil
 }
