@@ -123,19 +123,19 @@ func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 	_, episode_exist := set.episodeMap[key]
 
 	if episode_exist {
-	    return true
+		return true
 	}
 
-    // check if episode is before the lowest episode which sets all_before=true
-    // takes place
-    if set.allBefore {
-        barrier := set.allBeforeSeason * 100 + set.allBeforeEpisode
-        actual  := episode.Season * 100 + episode.Episode
+	// check if episode is before the lowest episode which sets all_before=true
+	// takes place
+	if set.allBefore {
+		barrier := set.allBeforeSeason*100 + set.allBeforeEpisode
+		actual := episode.Season*100 + episode.Episode
 
-        if actual < barrier {
-            return true
-        }
-    }
+		if actual < barrier {
+			return true
+		}
+	}
 
 	return false
 }
@@ -153,11 +153,11 @@ func ParseSeriesIndex(xmlpath string) (*SeriesIndex, error) {
 
 	xml.Unmarshal([]byte(content), &index)
 
-	index.SetupLookupCaches()
+	index.BuildUpSeriesMap()
 	return &index, nil
 }
 
-func (index *SeriesIndex) SetupLookupCaches() {
+func (index *SeriesIndex) BuildUpSeriesMap() {
 	// Build up the series map that holds references to series under the series
 	// name and all aliases
 	index.seriesMap = map[string]*Series{}
@@ -207,11 +207,11 @@ func (self *Series) BuildUpLanguageMap() {
 }
 
 type EpisodeSet struct {
-	XMLName     xml.Name  `xml:"episodes"`
-	EpisodeList []Episode `xml:"episode"`
-	Language    string    `xml:"lang,attr,omitempty"`
-	episodeMap  map[string]string
-	allBefore   bool
+	XMLName                           xml.Name  `xml:"episodes"`
+	EpisodeList                       []Episode `xml:"episode"`
+	Language                          string    `xml:"lang,attr,omitempty"`
+	episodeMap                        map[string]string
+	allBefore                         bool
 	allBeforeSeason, allBeforeEpisode int
 }
 
@@ -228,11 +228,11 @@ func (self *EpisodeSet) BuildUpEpisodeMap() {
 
 			self.episodeMap[key] = episode.Name
 
-            // handle all_before flag and set data for later usage
+			// handle all_before flag and set data for later usage
 			if episode.AllBefore {
-			    self.allBefore = true
-			    self.allBeforeSeason = nr_season
-			    self.allBeforeEpisode = nr_episode
+				self.allBefore = true
+				self.allBeforeSeason = nr_season
+				self.allBeforeEpisode = nr_episode
 			}
 		}
 	}

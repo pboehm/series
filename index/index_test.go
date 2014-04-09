@@ -4,6 +4,7 @@ import (
 	"github.com/pboehm/series/renamer"
 	"github.com/pboehm/series/util"
 	. "launchpad.net/gocheck"
+	"path"
 	"testing"
 )
 
@@ -83,18 +84,17 @@ func (s *MySuite) TestSeriesNameExistanceCheck(c *C) {
 
 func (s *MySuite) TestEpisodeExistanceWithAllBefore(c *C) {
 	episode := renamer.Episode{Series: "The Big Bang Theory", Season: 1,
-	                           Episode: 1, Language: "de"}
+		Episode: 1, Language: "de"}
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 
 	episode = renamer.Episode{Series: "The Big Bang Theory", Season: 6,
-	                           Episode: 0, Language: "de"}
+		Episode: 0, Language: "de"}
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 }
 
 func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
-		Name: "Testepisode", Extension: ".mkv",
-		Language: "de"}
+		Name: "Testepisode", Extension: ".mkv", Language: "de"}
 
 	added, err := s.index.AddEpisode(&episode)
 	c.Assert(err, IsNil)
@@ -104,8 +104,7 @@ func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
 
 func (s *MySuite) TestAddingAlreadyExistingEpisodeToIndex(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 1,
-		Name: "Testepisode", Extension: ".mkv",
-		Language: "de"}
+		Name: "Testepisode", Extension: ".mkv", Language: "de"}
 
 	added, err := s.index.AddEpisode(&episode)
 	c.Assert(err, ErrorMatches, "Episode already exists in Index")
@@ -114,12 +113,34 @@ func (s *MySuite) TestAddingAlreadyExistingEpisodeToIndex(c *C) {
 
 func (s *MySuite) TestAddingEpisodeWithoutLanguageToSeriesWithSingleLang(c *C) {
 	episode := renamer.Episode{Series: "The Big Bang Theory", Season: 6,
-		Episode: 5, Name: "Testepisode",
-		Extension: ".mkv"}
+		Episode: 5, Name: "Testepisode", Extension: ".mkv"}
 
 	added, err := s.index.AddEpisode(&episode)
 	c.Assert(err, IsNil)
 	c.Assert(added, Equals, true)
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 	c.Assert(episode.Language, Equals, "de")
+}
+
+func (s *MySuite) TestWriteIndexToFile(c *C) {
+	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
+		Name: "Testepisode", Extension: ".mkv", Language: "de"}
+
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, false)
+
+	// add episode
+	added, err := s.index.AddEpisode(&episode)
+	c.Assert(err, IsNil)
+	c.Assert(added, Equals, true)
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+
+	// dump it
+	dest := path.Join(s.dir, "seriesindex_dump.xml")
+	s.index.WriteToFile(dest)
+	c.Assert(util.PathExists(dest), Equals, true)
+
+	// parse it back and make assertions
+	index, err := ParseSeriesIndex(dest)
+	c.Assert(err, IsNil)
+	c.Assert(index.IsEpisodeInIndex(episode), Equals, true)
 }
