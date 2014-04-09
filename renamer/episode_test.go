@@ -7,11 +7,11 @@ import (
 )
 
 func (s *MySuite) TestEpisodeStruct(c *C) {
-    episode := Episode{season: 21, episode: 12, name: "Testepisode" }
-    c.Assert(episode.season, Equals, 21)
+    episode := Episode{Season: 21, Episode: 12, Name: "Testepisode" }
+    c.Assert(episode.Season, Equals, 21)
     c.Assert(episode.CleanedFileName(), Equals, "S21E12 - Testepisode")
 
-    episode = Episode{season: 1, episode: 1, name: "Testepisode" }
+    episode = Episode{Season: 1, Episode: 1, Name: "Testepisode" }
     c.Assert(episode.CleanedFileName(), Equals, "S01E01 - Testepisode")
 }
 
@@ -21,11 +21,11 @@ func (s *MySuite) TestEpisodeExtractionFromFile(c *C) {
     c.Assert(err, IsNil)
     c.Assert(episode, Not(IsNil))
     c.Assert(episode, FitsTypeOf, new(Episode))
-    c.Assert(episode.season, Equals, 1)
-    c.Assert(episode.episode, Equals, 1)
-    c.Assert(episode.name, Equals, "Testtest")
-    c.Assert(episode.series, Equals, "Criminal Minds")
-    c.Assert(episode.episodefile, Equals, s.FileWithPath("crmi"))
+    c.Assert(episode.Season, Equals, 1)
+    c.Assert(episode.Episode, Equals, 1)
+    c.Assert(episode.Name, Equals, "Testtest")
+    c.Assert(episode.Series, Equals, "Criminal Minds")
+    c.Assert(episode.Episodefile, Equals, s.FileWithPath("crmi"))
     c.Assert(episode.CleanedFileName(), Equals, "S01E01 - Testtest.mkv")
 }
 
@@ -35,11 +35,11 @@ func (s *MySuite) TestEpisodeExtractionFromDirectory(c *C) {
     c.Assert(err, IsNil)
     c.Assert(episode, Not(IsNil))
     c.Assert(episode, FitsTypeOf, new(Episode))
-    c.Assert(episode.season, Equals, 1)
-    c.Assert(episode.episode, Equals, 1)
-    c.Assert(episode.name, Equals, "Testtest")
-    c.Assert(episode.series, Equals, "Criminal Minds")
-    c.Assert(episode.episodefile, Equals,
+    c.Assert(episode.Season, Equals, 1)
+    c.Assert(episode.Episode, Equals, 1)
+    c.Assert(episode.Name, Equals, "Testtest")
+    c.Assert(episode.Series, Equals, "Criminal Minds")
+    c.Assert(episode.Episodefile, Equals,
         path.Join(s.FileWithPath("crmi_dir"), "episode.mkv"))
     c.Assert(episode.CleanedFileName(), Equals, "S01E01 - Testtest.mkv")
     c.Assert(episode.CanBeRenamed(), Equals, true)
@@ -51,11 +51,11 @@ func (s *MySuite) TestEpisodeExtractionFromDirectoryWithBetterFile(c *C) {
     c.Assert(err, IsNil)
     c.Assert(episode, Not(IsNil))
     c.Assert(episode, FitsTypeOf, new(Episode))
-    c.Assert(episode.season, Equals, 9)
-    c.Assert(episode.episode, Equals, 9)
-    c.Assert(episode.name, Equals, "Platonish")
-    c.Assert(episode.series, Equals, "How I Met Your Mother")
-    c.Assert(episode.episodefile, Equals,
+    c.Assert(episode.Season, Equals, 9)
+    c.Assert(episode.Episode, Equals, 9)
+    c.Assert(episode.Name, Equals, "Platonish")
+    c.Assert(episode.Series, Equals, "How I Met Your Mother")
+    c.Assert(episode.Episodefile, Equals,
         path.Join(s.FileWithPath("himym"),
             "How.I.Met.Your.Mother.S09E09.Platonish.1080p.WEB-DL.DD5.mkv"))
     c.Assert(episode.CleanedFileName(), Equals, "S09E09 - Platonish.mkv")
@@ -68,10 +68,10 @@ func (s *MySuite) TestEpisodeExtractionFromDirectoryWithInvalidBetterFile(c *C) 
     c.Assert(err, IsNil)
     c.Assert(episode, Not(IsNil))
     c.Assert(episode, FitsTypeOf, new(Episode))
-    c.Assert(episode.season, Equals, 9)
-    c.Assert(episode.episode, Equals, 9)
-    c.Assert(episode.name, Equals, "")
-    c.Assert(episode.series, Equals, "HIMYM")
+    c.Assert(episode.Season, Equals, 9)
+    c.Assert(episode.Episode, Equals, 9)
+    c.Assert(episode.Name, Equals, "")
+    c.Assert(episode.Series, Equals, "HIMYM")
     c.Assert(episode.CanBeRenamed(), Equals, false)
 }
 
@@ -104,17 +104,17 @@ func (s *MySuite) TestEpisodeExtractionFromNotExistingFile(c *C) {
 func (s *MySuite) TestEpisodeTrashwordRemoval(c *C) {
     episode, _ := CreateEpisodeFromPath(s.FileWithPath("flpo2"))
 
-    c.Assert(episode.name, Equals,
+    c.Assert(episode.Name, Equals,
         "Die German Erinnerungen German Dubbed BLURAYRiP")
     episode.RemoveTrashwords()
-    c.Assert(episode.name, Equals, "Die German Erinnerungen")
+    c.Assert(episode.Name, Equals, "Die German Erinnerungen")
 }
 
 func (s *MySuite) TestEpisodeTrashwordRemovalSkipAfterTwoPurges(c *C) {
     episode, _ := CreateEpisodeFromPath(s.FileWithPath("ncis"))
     episode.RemoveTrashwords()
 
-    c.Assert(episode.name, Equals, "Gueterzug nach Miami")
+    c.Assert(episode.Name, Equals, "Gueterzug nach Miami")
 }
 
 func (s *MySuite) TestEpisodeRenamingEpisodeFile(c *C) {
