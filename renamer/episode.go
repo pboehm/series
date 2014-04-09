@@ -76,7 +76,7 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 
 type Episode struct {
     Season, Episode int
-    Name, Series, Extension, Episodefile, Path string
+    Name, Series, Extension, Episodefile, Path, Language string
 }
 
 func (self *Episode) CleanedFileName() string {

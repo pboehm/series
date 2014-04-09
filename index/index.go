@@ -15,6 +15,19 @@ type SeriesIndex struct {
 	SeriesMap  map[string]*Series
 }
 
+func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
+    series, series_exist := self.SeriesMap[episode.Series]
+    if ! series_exist { return false }
+
+    _, language_exist := series.EpisodeMap[episode.Language]
+    if ! language_exist { return false }
+
+    key := GetIndexKey(episode.Season, episode.Episode)
+    _, episode_exist := series.EpisodeMap[episode.Language][key]
+
+    return episode_exist
+}
+
 func ParseSeriesIndex(xmlpath string) (*SeriesIndex, error) {
 	var index SeriesIndex
 
@@ -93,7 +106,7 @@ func (self *Series) BuildUpEpisodeMap() {
 			if matched != nil {
 				nr_season, _ := strconv.Atoi(matched["season"])
 				nr_episode, _ := strconv.Atoi(matched["episode"])
-				key := fmt.Sprintf("%d_%d", nr_season, nr_episode)
+                key := GetIndexKey(nr_season, nr_episode)
 
 				self.EpisodeMap[set.GetLanguage()][key] = episode.Name
 			}

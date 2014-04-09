@@ -3,6 +3,7 @@ package index
 import (
     . "launchpad.net/gocheck"
     "github.com/pboehm/series/util"
+    "github.com/pboehm/series/renamer"
     "testing"
 )
 
@@ -48,4 +49,19 @@ func (s *MySuite) TestEpisodeLookupCache(c *C) {
     epi, exist := series.EpisodeMap["de"]["1_9"]
     c.Assert(exist, Equals, false)
     c.Assert(epi, Equals, "")
+}
+
+func (s *MySuite) TestSeriesNameExistanceCheckWithExactName(c *C) {
+    episode := renamer.Episode{ Series: "Shameless US", Season: 1, Episode: 1,
+                                Language: "de" }
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+
+    episode.Language = "en"
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+
+    episode.Language = "fr"
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, false)
+
+    episode.Season = 100
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, false)
 }
