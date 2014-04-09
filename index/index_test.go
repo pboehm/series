@@ -81,6 +81,16 @@ func (s *MySuite) TestSeriesNameExistanceCheck(c *C) {
 		Equals, "The Big Bang Theory")
 }
 
+func (s *MySuite) TestEpisodeExistanceWithAllBefore(c *C) {
+	episode := renamer.Episode{Series: "The Big Bang Theory", Season: 1,
+	                           Episode: 1, Language: "de"}
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+
+	episode = renamer.Episode{Series: "The Big Bang Theory", Season: 6,
+	                           Episode: 0, Language: "de"}
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+}
+
 func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
 		Name: "Testepisode", Extension: ".mkv",

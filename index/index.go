@@ -122,7 +122,22 @@ func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 	key := GetIndexKey(episode.Season, episode.Episode)
 	_, episode_exist := set.episodeMap[key]
 
-	return episode_exist
+	if episode_exist {
+	    return true
+	}
+
+    // check if episode is before the lowest episode which sets all_before=true
+    // takes place
+    if set.allBefore {
+        barrier := set.allBeforeSeason * 100 + set.allBeforeEpisode
+        actual  := episode.Season * 100 + episode.Episode
+
+        if actual < barrier {
+            return true
+        }
+    }
+
+	return false
 }
 
 func ParseSeriesIndex(xmlpath string) (*SeriesIndex, error) {
@@ -196,6 +211,8 @@ type EpisodeSet struct {
 	EpisodeList []Episode `xml:"episode"`
 	Language    string    `xml:"lang,attr,omitempty"`
 	episodeMap  map[string]string
+	allBefore   bool
+	allBeforeSeason, allBeforeEpisode int
 }
 
 func (self *EpisodeSet) BuildUpEpisodeMap() {
@@ -210,6 +227,13 @@ func (self *EpisodeSet) BuildUpEpisodeMap() {
 			key := GetIndexKey(nr_season, nr_episode)
 
 			self.episodeMap[key] = episode.Name
+
+            // handle all_before flag and set data for later usage
+			if episode.AllBefore {
+			    self.allBefore = true
+			    self.allBeforeSeason = nr_season
+			    self.allBeforeEpisode = nr_episode
+			}
 		}
 	}
 }
