@@ -7,12 +7,40 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"regexp"
+	"strings"
 )
 
 type SeriesIndex struct {
 	XMLName    xml.Name `xml:"seriesindex"`
 	SeriesList []Series `xml:"series"`
 	SeriesMap  map[string]*Series
+}
+
+func (self *SeriesIndex) SeriesNameInIndex(series_name string) string {
+
+    series_in_index, exist := self.SeriesMap[series_name]
+    if exist {
+        return series_in_index.Name
+    }
+
+    // do a case insensitive search
+    joined := series_name
+    for {
+        if (joined == "") { break }
+
+        pattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", joined))
+        for name, series := range self.SeriesMap {
+            if pattern.Match([]byte(name)) {
+                return series.Name
+            }
+        }
+
+        splitted := strings.Split(joined, " ")
+        joined = strings.Join(splitted[1:], " ")
+    }
+
+    return "";
 }
 
 func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {

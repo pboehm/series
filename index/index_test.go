@@ -51,7 +51,7 @@ func (s *MySuite) TestEpisodeLookupCache(c *C) {
     c.Assert(epi, Equals, "")
 }
 
-func (s *MySuite) TestSeriesNameExistanceCheckWithExactName(c *C) {
+func (s *MySuite) TestEpisodeExistanceCheckWithExactSeriesName(c *C) {
     episode := renamer.Episode{ Series: "Shameless US", Season: 1, Episode: 1,
                                 Language: "de" }
     c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
@@ -64,4 +64,17 @@ func (s *MySuite) TestSeriesNameExistanceCheckWithExactName(c *C) {
 
     episode.Season = 100
     c.Assert(s.index.IsEpisodeInIndex(episode), Equals, false)
+}
+
+func (s *MySuite) TestSeriesNameExistanceCheck(c *C) {
+    c.Assert(s.index.SeriesNameInIndex("Shameless US"), Equals, "Shameless US")
+    c.Assert(s.index.SeriesNameInIndex("shameless US"), Equals, "Shameless US")
+
+    c.Assert(s.index.SeriesNameInIndex("Community"), Equals, "Community")
+    c.Assert(s.index.SeriesNameInIndex("Comm"), Equals, "Community")
+    c.Assert(s.index.SeriesNameInIndex("Unity"), Equals, "Community")
+    c.Assert(s.index.SeriesNameInIndex("tvp community"), Equals, "Community")
+
+    c.Assert(s.index.SeriesNameInIndex("tHE bIG bANG tHEORY"),
+                                       Equals, "The Big Bang Theory")
 }
