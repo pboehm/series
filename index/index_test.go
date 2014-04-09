@@ -29,8 +29,23 @@ func (s *MySuite) TestIndexParsing(c *C) {
     c.Assert(s.index, NotNil)
     c.Assert(s.err, IsNil)
     c.Assert(s.index.SeriesList, HasLen, 4)
+}
 
+func (s *MySuite) TestSeriesLookupCache(c *C) {
     c.Assert(s.index.SeriesMap, HasLen, 6)
     c.Assert(s.index.SeriesMap["Community"], Equals, s.index.SeriesMap["Comm"])
-    c.Assert(s.index.SeriesMap["Community"].Name, Equals, "Community")
+}
+
+func (s *MySuite) TestEpisodeLookupCache(c *C) {
+    series := s.index.SeriesMap["Shameless US"]
+
+    c.Assert(series.EpisodeMap, HasLen, 2)
+    c.Assert(series.EpisodeMap["de"], HasLen, 8)
+    c.Assert(series.EpisodeMap["en"], HasLen, 23)
+
+    c.Assert(series.EpisodeMap["de"]["1_1"], Equals, "S01E01 - Pilot.avi")
+
+    epi, exist := series.EpisodeMap["de"]["1_9"]
+    c.Assert(exist, Equals, false)
+    c.Assert(epi, Equals, "")
 }
