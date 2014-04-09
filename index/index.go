@@ -33,21 +33,21 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 
 		// When there is no language set and the series is only watched in one
 		// language we can take this series
-		if len(series.episodeMap) == 1 {
-			for k, _ := range series.episodeMap {
+		if len(series.languageMap) == 1 {
+			for k, _ := range series.languageMap {
 				episode.Language = k
 				break
 			}
 		}
 
-		if len(series.episodeMap) > 1 {
+		if len(series.languageMap) > 1 {
 			// Find the language which is most likely the right language
 			// - when episode exists in one of the languages
 			// - take the language where the episode is the nearest one
 		}
 	}
 
-	_, language_exist := series.episodeMap[episode.Language]
+	_, language_exist := series.languageMap[episode.Language]
 	if !language_exist {
 		return false, errors.New("Series is not watched in this language")
 	}
@@ -59,21 +59,19 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 	episode_entry := Episode{Name: episode.CleanedFileName()}
 
 	// find the right EpisodeSet so we can add our new episode to it
-	for i := 0; i < len(series.EpisodeSets); i++ {
-		set := &(series.EpisodeSets[i])
-		if set.GetLanguage() == episode.Language {
-			set.EpisodeList = append(set.EpisodeList, episode_entry)
+	set, exist := series.languageMap[episode.Language]
+	if exist {
+		set.EpisodeList = append(set.EpisodeList, episode_entry)
 
-			// add it to the lookup cache
-			key := GetIndexKey(episode.Season, episode.Episode)
-			series.episodeMap[episode.Language][key] = episode_entry.Name
+		// add it to the lookup cache
+		key := GetIndexKey(episode.Season, episode.Episode)
+		set.episodeMap[key] = episode_entry.Name
 
-			return true, nil
-		}
+		return true, nil
 	}
 
 	return false,
-		errors.New("Episode couldn't be added to index. This should no occur!")
+		errors.New("Episode couldn't be added to index. This shouldn't occur!")
 }
 
 func (self *SeriesIndex) SeriesNameInIndex(series_name string) string {
@@ -116,13 +114,13 @@ func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 		return false
 	}
 
-	_, language_exist := series.episodeMap[episode.Language]
+	set, language_exist := series.languageMap[episode.Language]
 	if !language_exist {
 		return false
 	}
 
 	key := GetIndexKey(episode.Season, episode.Episode)
-	_, episode_exist := series.episodeMap[episode.Language][key]
+	_, episode_exist := set.episodeMap[key]
 
 	return episode_exist
 }
@@ -151,7 +149,7 @@ func (index *SeriesIndex) SetupLookupCaches() {
 
 	for i := 0; i < len(index.SeriesList); i++ {
 		series := &(index.SeriesList[i])
-		series.BuildUpEpisodeMap()
+		series.BuildUpLanguageMap()
 
 		index.seriesMap[series.Name] = series
 
@@ -176,45 +174,20 @@ func (self *SeriesIndex) WriteToFile(xmlpath string) {
 	}
 }
 
-func (self *SeriesIndex) Print() {
-	index := *self
-
-	fmt.Println(index.SeriesList)
-	for _, series := range index.SeriesList {
-		fmt.Printf(">>> %s\n", series.Name)
-		for _, episodeset := range series.EpisodeSets {
-			fmt.Printf(">>>> %s - %d\n", episodeset.Language,
-				len(episodeset.EpisodeList))
-			for _, episode := range episodeset.EpisodeList {
-				fmt.Printf(">>>>> %s\n", episode.Name)
-			}
-		}
-	}
-}
-
 type Series struct {
 	Name        string       `xml:"name,attr"`
 	EpisodeSets []EpisodeSet `xml:"episodes"`
 	Aliases     []Alias      `xml:"alias"`
-	episodeMap  map[string]map[string]string
+	languageMap map[string]*EpisodeSet
 }
 
-func (self *Series) BuildUpEpisodeMap() {
-	self.episodeMap = make(map[string]map[string]string)
+func (self *Series) BuildUpLanguageMap() {
+	self.languageMap = make(map[string]*EpisodeSet)
 
-	for _, set := range self.EpisodeSets {
-		self.episodeMap[set.GetLanguage()] = make(map[string]string)
-
-		for _, episode := range set.EpisodeList {
-			matched := renamer.ExtractEpisodeInformation(episode.Name)
-			if matched != nil {
-				nr_season, _ := strconv.Atoi(matched["season"])
-				nr_episode, _ := strconv.Atoi(matched["episode"])
-				key := GetIndexKey(nr_season, nr_episode)
-
-				self.episodeMap[set.GetLanguage()][key] = episode.Name
-			}
-		}
+	for i := 0; i < len(self.EpisodeSets); i++ {
+		set := &(self.EpisodeSets[i])
+		set.BuildUpEpisodeMap()
+		self.languageMap[set.GetLanguage()] = set
 	}
 }
 
@@ -222,6 +195,23 @@ type EpisodeSet struct {
 	XMLName     xml.Name  `xml:"episodes"`
 	EpisodeList []Episode `xml:"episode"`
 	Language    string    `xml:"lang,attr,omitempty"`
+	episodeMap  map[string]string
+}
+
+func (self *EpisodeSet) BuildUpEpisodeMap() {
+	self.episodeMap = make(map[string]string)
+
+	for _, episode := range self.EpisodeList {
+
+		matched := renamer.ExtractEpisodeInformation(episode.Name)
+		if matched != nil {
+			nr_season, _ := strconv.Atoi(matched["season"])
+			nr_episode, _ := strconv.Atoi(matched["episode"])
+			key := GetIndexKey(nr_season, nr_episode)
+
+			self.episodeMap[key] = episode.Name
+		}
+	}
 }
 
 func (self *EpisodeSet) GetLanguage() string {

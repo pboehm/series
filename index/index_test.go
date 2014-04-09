@@ -41,13 +41,14 @@ func (s *MySuite) TestSeriesLookupCache(c *C) {
 func (s *MySuite) TestEpisodeLookupCache(c *C) {
 	series := s.index.seriesMap["Shameless US"]
 
-	c.Assert(series.episodeMap, HasLen, 2)
-	c.Assert(series.episodeMap["de"], HasLen, 8)
-	c.Assert(series.episodeMap["en"], HasLen, 23)
+	c.Assert(series.languageMap, HasLen, 2)
+	c.Assert(series.languageMap["de"].episodeMap, HasLen, 8)
+	c.Assert(series.languageMap["en"].episodeMap, HasLen, 23)
 
-	c.Assert(series.episodeMap["de"]["1_1"], Equals, "S01E01 - Pilot.avi")
+	c.Assert(series.languageMap["de"].episodeMap["1_1"],
+		Equals, "S01E01 - Pilot.avi")
 
-	epi, exist := series.episodeMap["de"]["1_9"]
+	epi, exist := series.languageMap["de"].episodeMap["1_9"]
 	c.Assert(exist, Equals, false)
 	c.Assert(epi, Equals, "")
 }
