@@ -33,20 +33,20 @@ func (s *MySuite) TestIndexParsing(c *C) {
 }
 
 func (s *MySuite) TestSeriesLookupCache(c *C) {
-    c.Assert(s.index.SeriesMap, HasLen, 6)
-    c.Assert(s.index.SeriesMap["Community"], Equals, s.index.SeriesMap["Comm"])
+    c.Assert(s.index.seriesMap, HasLen, 6)
+    c.Assert(s.index.seriesMap["Community"], Equals, s.index.seriesMap["Comm"])
 }
 
 func (s *MySuite) TestEpisodeLookupCache(c *C) {
-    series := s.index.SeriesMap["Shameless US"]
+    series := s.index.seriesMap["Shameless US"]
 
-    c.Assert(series.EpisodeMap, HasLen, 2)
-    c.Assert(series.EpisodeMap["de"], HasLen, 8)
-    c.Assert(series.EpisodeMap["en"], HasLen, 23)
+    c.Assert(series.episodeMap, HasLen, 2)
+    c.Assert(series.episodeMap["de"], HasLen, 8)
+    c.Assert(series.episodeMap["en"], HasLen, 23)
 
-    c.Assert(series.EpisodeMap["de"]["1_1"], Equals, "S01E01 - Pilot.avi")
+    c.Assert(series.episodeMap["de"]["1_1"], Equals, "S01E01 - Pilot.avi")
 
-    epi, exist := series.EpisodeMap["de"]["1_9"]
+    epi, exist := series.episodeMap["de"]["1_9"]
     c.Assert(exist, Equals, false)
     c.Assert(epi, Equals, "")
 }
@@ -77,4 +77,37 @@ func (s *MySuite) TestSeriesNameExistanceCheck(c *C) {
 
     c.Assert(s.index.SeriesNameInIndex("tHE bIG bANG tHEORY"),
                                        Equals, "The Big Bang Theory")
+}
+
+func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
+    episode := renamer.Episode{ Series: "Shameless US", Season: 1, Episode: 9,
+                                Name: "Testepisode", Extension: ".mkv",
+                                Language: "de" }
+
+    added, err := s.index.AddEpisode(&episode)
+    c.Assert(err, IsNil)
+    c.Assert(added, Equals, true)
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+}
+
+func (s *MySuite) TestAddingAlreadyExistingEpisodeToIndex(c *C) {
+    episode := renamer.Episode{ Series: "Shameless US", Season: 1, Episode: 1,
+                                Name: "Testepisode", Extension: ".mkv",
+                                Language: "de" }
+
+    added, err := s.index.AddEpisode(&episode)
+    c.Assert(err, ErrorMatches, "Episode already exists in Index")
+    c.Assert(added, Equals, false)
+}
+
+func (s *MySuite) TestAddingEpisodeWithoutLanguageToSeriesWithSingleLang(c *C) {
+    episode := renamer.Episode{ Series: "The Big Bang Theory", Season: 6,
+                                Episode: 5, Name: "Testepisode",
+                                Extension: ".mkv" }
+
+    added, err := s.index.AddEpisode(&episode)
+    c.Assert(err, IsNil)
+    c.Assert(added, Equals, true)
+    c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+    c.Assert(episode.Language, Equals, "de")
 }
