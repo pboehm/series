@@ -1,7 +1,7 @@
 package util
 
 import (
-    "regexp"
+	"regexp"
 )
 
 // NamedCaptureGroups does a regexp match wih the supplied pattern on the str
@@ -9,15 +9,15 @@ import (
 //
 // when the pattern does not match (nil, false) is returned
 func NamedCaptureGroups(pattern *regexp.Regexp, str string) (map[string]string, bool) {
-    match := pattern.FindStringSubmatch(str)
-    if match == nil {
-        return nil, false
-    }
+	match := pattern.FindStringSubmatch(str)
+	if match == nil {
+		return nil, false
+	}
 
-    result := make(map[string]string)
-    for i, name := range pattern.SubexpNames() {
-        result[name] = match[i]
-    }
+	result := make(map[string]string)
+	for i, name := range pattern.SubexpNames() {
+		result[name] = match[i]
+	}
 
-    return result, true
+	return result, true
 }
