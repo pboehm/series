@@ -44,7 +44,11 @@ func (self *SeriesIndex) SeriesNameInIndex(series_name string) string {
 }
 
 func (self *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
-    series, series_exist := self.SeriesMap[episode.Series]
+
+    series_name := self.SeriesNameInIndex(episode.Series)
+    if series_name == "" { return false }
+
+    series, series_exist := self.SeriesMap[series_name]
     if ! series_exist { return false }
 
     _, language_exist := series.EpisodeMap[episode.Language]
