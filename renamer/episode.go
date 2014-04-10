@@ -8,6 +8,7 @@ import (
 	GlobalPath "path"
 	"path/filepath"
 	"strconv"
+	"regexp"
 )
 
 func CreateEpisodeFromPath(path string) (*Episode, error) {
@@ -70,6 +71,7 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 			}
 		}
 	}
+	episode.ExtractLanguage()
 
 	return episode, nil
 }
@@ -94,6 +96,13 @@ func (self *Episode) SetDefaultEpisodeName() {
 
 func (self *Episode) CanBeRenamed() bool {
 	return self.HasValidEpisodeName() && util.IsFile(self.Episodefile)
+}
+
+func (self *Episode) ExtractLanguage() {
+    pattern := regexp.MustCompile("(?i)German")
+    if pattern.Match([]byte(self.Name)) {
+        self.Language = "de"
+    }
 }
 
 func (self *Episode) RemoveTrashwords() {

@@ -75,6 +75,17 @@ func (s *MySuite) TestEpisodeExtractionFromDirectoryWithInvalidBetterFile(c *C) 
 	c.Assert(episode.CanBeRenamed(), Equals, false)
 }
 
+func (s *MySuite) TestEpisodeLanguageExtraction(c *C) {
+	episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi"))
+    c.Assert(episode.Language, Equals, "")
+
+	episode, _ = CreateEpisodeFromPath(s.FileWithPath("chuck1"))
+    c.Assert(episode.Language, Equals, "de")
+
+	episode, _ = CreateEpisodeFromPath(s.FileWithPath("ncis"))
+    c.Assert(episode.Language, Equals, "de")
+}
+
 func (s *MySuite) TestEpisodeThatShouldntBeRenamable(c *C) {
 	episode, _ := CreateEpisodeFromPath(s.FileWithPath("unknown_series"))
 	c.Assert(episode.CanBeRenamed(), Equals, false)
