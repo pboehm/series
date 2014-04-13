@@ -46,33 +46,27 @@ func (s *MySuite) TestEpisodeExtractionFromDirectory(c *C) {
 }
 
 func (s *MySuite) TestEpisodeExtractionFromDirectoryWithBetterFile(c *C) {
-	episode, err := CreateEpisodeFromPath(s.FileWithPath("himym"))
+	episode, _ := CreateEpisodeFromPath(s.FileWithPath("himym"))
 
-	c.Assert(err, IsNil)
-	c.Assert(episode, Not(IsNil))
-	c.Assert(episode, FitsTypeOf, new(Episode))
-	c.Assert(episode.Season, Equals, 9)
-	c.Assert(episode.Episode, Equals, 9)
+	c.Assert(episode.Name, Equals, "")
+	c.Assert(episode.Series, Equals, "HMM8p")
+
+	episode.FindBetterInformation()
+
 	c.Assert(episode.Name, Equals, "Platonish")
 	c.Assert(episode.Series, Equals, "How I Met Your Mother")
-	c.Assert(episode.Episodefile, Equals,
-		path.Join(s.FileWithPath("himym"),
-			"How.I.Met.Your.Mother.S09E09.Platonish.1080p.WEB-DL.DD5.mkv"))
-	c.Assert(episode.CleanedFileName(), Equals, "S09E09 - Platonish.mkv")
-	c.Assert(episode.CanBeRenamed(), Equals, true)
 }
 
 func (s *MySuite) TestEpisodeExtractionFromDirectoryWithInvalidBetterFile(c *C) {
-	episode, err := CreateEpisodeFromPath(s.FileWithPath("himym_not_matching"))
+	episode, _ := CreateEpisodeFromPath(s.FileWithPath("himym_not_matching"))
 
-	c.Assert(err, IsNil)
-	c.Assert(episode, Not(IsNil))
-	c.Assert(episode, FitsTypeOf, new(Episode))
-	c.Assert(episode.Season, Equals, 9)
-	c.Assert(episode.Episode, Equals, 9)
 	c.Assert(episode.Name, Equals, "")
 	c.Assert(episode.Series, Equals, "HIMYM")
-	c.Assert(episode.CanBeRenamed(), Equals, false)
+
+	episode.FindBetterInformation()
+
+	c.Assert(episode.Name, Equals, "")
+	c.Assert(episode.Series, Equals, "HIMYM")
 }
 
 func (s *MySuite) TestEpisodeLanguageExtraction(c *C) {

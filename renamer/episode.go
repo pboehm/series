@@ -51,26 +51,6 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 	}
 	episode.Name = CleanEpisodeInformation(name)
 
-	// check if the Episodefile contains more informations than we already have
-	// and set these informations
-	if util.IsDirectory(path) {
-		subepisode, suberr := CreateEpisodeFromPath(episode.Episodefile)
-		if suberr == nil {
-			subepisode.RemoveTrashwords()
-
-			if episode.Season == subepisode.Season &&
-				episode.Episode == subepisode.Episode {
-
-				if len(subepisode.Series) > len(episode.Series) {
-					episode.Series = subepisode.Series
-				}
-
-				if len(subepisode.Name) > len(episode.Name) {
-					episode.Name = subepisode.Name
-				}
-			}
-		}
-	}
 	episode.ExtractLanguage()
 
 	return episode, nil
@@ -107,6 +87,29 @@ func (self *Episode) ExtractLanguage() {
 
 func (self *Episode) RemoveTrashwords() {
 	self.Name = ApplyTrashwordsOnString(self.Name)
+}
+
+func (self *Episode) FindBetterInformation() {
+	// check if the Episodefile contains more informations than we already have
+	// and set these informations
+	if util.IsDirectory(self.Path) {
+		subepisode, suberr := CreateEpisodeFromPath(self.Episodefile)
+		if suberr == nil {
+			subepisode.RemoveTrashwords()
+
+			if self.Season == subepisode.Season &&
+				self.Episode == subepisode.Episode {
+
+				if len(subepisode.Series) > len(self.Series) {
+					self.Series = subepisode.Series
+				}
+
+				if len(subepisode.Name) > len(self.Name) {
+					self.Name = subepisode.Name
+				}
+			}
+		}
+	}
 }
 
 func (self *Episode) Rename(dest_path string) error {
