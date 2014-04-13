@@ -21,11 +21,6 @@ func (s *MySuite) SetUpTest(c *C) {
 	s.config_file = path.Join(s.dir, ".series/config.json")
 }
 
-// type Config struct {
-// 	IndexFile, PreProcessingHook, PostProcessingHook, EpisodeHook string
-// 	EpisodeDirectory                                              string
-// }
-
 func (s *MySuite) TestConfigParsingWhenNoConfigExists(c *C) {
 	standard := Config{}
 	config := GetConfig(s.config_file, standard)
