@@ -30,21 +30,7 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 
 	// Handle episodes where no language is set
 	if episode.Language == "" {
-
-		// When there is no language set and the series is only watched in one
-		// language we can take this series
-		if len(series.languageMap) == 1 {
-			for k, _ := range series.languageMap {
-				episode.Language = k
-				break
-			}
-		}
-
-		if len(series.languageMap) > 1 {
-			// Find the language which is most likely the right language
-			// - when episode exists in one of the languages
-			// - take the language where the episode is the nearest one
-		}
+		self.GuessEpisodeLanguage(episode, series)
 	}
 
 	_, language_exist := series.languageMap[episode.Language]
@@ -72,6 +58,59 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 
 	return false,
 		errors.New("Episode couldn't be added to index. This shouldn't occur!")
+}
+
+func (self *SeriesIndex) GuessEpisodeLanguage(episode *renamer.Episode, series *Series) {
+	// This methods tries to find the right language for the supplied episode
+	// based on several heuristics
+
+	// When there is no language set and the series is only watched in one
+	// language we can take this series
+	if len(series.languageMap) == 1 {
+		for k, _ := range series.languageMap {
+			episode.Language = k
+			break
+		}
+	}
+
+	// Find the language which is most likely the right language
+	if len(series.languageMap) > 1 {
+		possible_languages := []string{}
+
+		// when episode has not been watched in only one of the languages
+		for lang, _ := range series.languageMap {
+			episode.Language = lang
+			if !self.IsEpisodeInIndex(*episode) {
+				possible_languages = append(possible_languages, lang)
+			}
+
+			episode.Language = ""
+		}
+
+		if len(possible_languages) == 1 {
+			episode.Language = possible_languages[0]
+
+		} else if len(possible_languages) > 1 {
+			// take the language where the previous episode exist
+			previous_existing := []string{}
+
+			for _, lang := range possible_languages {
+				epi := *episode
+				epi.Language = lang
+				if (epi.Episode - 1) > 0 {
+					epi.Episode -= 1
+				}
+
+				if self.IsEpisodeInIndex(epi) {
+					previous_existing = append(previous_existing, lang)
+				}
+			}
+
+			if len(previous_existing) == 1 {
+				episode.Language = previous_existing[0]
+			}
+		}
+	}
 }
 
 func (self *SeriesIndex) SeriesNameInIndex(series_name string) string {

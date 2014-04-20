@@ -92,7 +92,7 @@ func (s *MySuite) TestEpisodeExistanceWithAllBefore(c *C) {
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 }
 
-func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
+func (s *MySuite) TestAddValidEpisodeToIndex(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
 		Name: "Testepisode", Extension: ".mkv", Language: "de"}
 
@@ -102,7 +102,7 @@ func (s *MySuite) TestAddingValidEpisodeToIndex(c *C) {
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 }
 
-func (s *MySuite) TestAddingAlreadyExistingEpisodeToIndex(c *C) {
+func (s *MySuite) TestAddAlreadyExistingEpisodeToIndex(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 1,
 		Name: "Testepisode", Extension: ".mkv", Language: "de"}
 
@@ -111,7 +111,7 @@ func (s *MySuite) TestAddingAlreadyExistingEpisodeToIndex(c *C) {
 	c.Assert(added, Equals, false)
 }
 
-func (s *MySuite) TestAddingEpisodeWithoutLanguageToSeriesWithSingleLang(c *C) {
+func (s *MySuite) TestAddEpisodeWithoutLanguageToSeriesWithSingleLang(c *C) {
 	episode := renamer.Episode{Series: "The Big Bang Theory", Season: 6,
 		Episode: 5, Name: "Testepisode", Extension: ".mkv"}
 
@@ -120,6 +120,32 @@ func (s *MySuite) TestAddingEpisodeWithoutLanguageToSeriesWithSingleLang(c *C) {
 	c.Assert(added, Equals, true)
 	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
 	c.Assert(episode.Language, Equals, "de")
+}
+
+func (s *MySuite) TestAddEpisodeWithoutLanguageToSeriesWithMultiLang(c *C) {
+	// this episode has already been watched in "en" so it has to be "de"
+	episode := renamer.Episode{Series: "Shameless US", Season: 1,
+		Episode: 9, Name: "Testepisode", Extension: ".mkv"}
+
+	added, err := s.index.AddEpisode(&episode)
+	c.Assert(err, IsNil)
+	c.Assert(added, Equals, true)
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+	c.Assert(episode.Language, Equals, "de")
+}
+
+func (s *MySuite) TestAddEpisodeWithoutLanguageToSeriesWithMultiLangPrev(c *C) {
+	// this episode hasn't been watched in any language but there is one series
+	// where the previous episode exists
+	episode := renamer.Episode{Series: "Shameless US", Season: 2,
+		Episode: 12, Name: "Testepisode", Extension: ".mkv"}
+
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, false)
+	added, err := s.index.AddEpisode(&episode)
+	c.Assert(err, IsNil)
+	c.Assert(added, Equals, true)
+	c.Assert(s.index.IsEpisodeInIndex(episode), Equals, true)
+	c.Assert(episode.Language, Equals, "en")
 }
 
 func (s *MySuite) TestWriteIndexToFile(c *C) {
