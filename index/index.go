@@ -21,11 +21,20 @@ type SeriesIndex struct {
 }
 
 func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
-	series_name := self.SeriesNameInIndex(episode.Series)
-	if series_name == "" {
+
+    // test for all possible series names if they exist in index and take the
+    // first matching
+    for _, possible_series := range episode.GetPossibleSeriesNames() {
+        series_name := self.SeriesNameInIndex(possible_series)
+        if series_name != "" {
+            episode.Series = series_name
+            break
+        }
+    }
+
+	if episode.Series == "" {
 		return false, errors.New("Series does not exist in index")
 	}
-	episode.Series = series_name
 	series := self.seriesMap[episode.Series]
 
 	// Handle episodes where no language is set
