@@ -93,6 +93,12 @@ func (s *MySuite) SetUpTest(c *C) {
 			true, map[string]string{
 				"How.I.Met.Your.Mother.S09E10.Platonish.1080p.WEB-DL.DD5.mkv": "abcksfvfddvhfjvdhfvjdhfv",
 			}},
+		"rules_of_engagement": {
+			"RoEG8p.713/Rules.of.Engagement.S07E13.100th.GERMAN.DL.DUBBED/",
+			true, map[string]string{
+				"tvp-egagement-s07e13-1080p.mkv": "abcksfvfddvhfjv",
+				"tvp-egagement-s07e13-1080p.nfo": "abc",
+			}},
 		"chuck1_dir": {
 			"Chuck.S01E01.Dies.ist.ein.Test.German.Dubbed.BLURAYRiP",
 			true, map[string]string{}},
@@ -100,7 +106,7 @@ func (s *MySuite) SetUpTest(c *C) {
 
 	for key, fixture := range s.fixtures {
 		if fixture.dir {
-			os.Mkdir(s.FileWithPath(key), 0700)
+			os.MkdirAll(s.FileWithPath(key), 0700)
 			for file, content := range fixture.files {
 				createFile(path.Join(s.FileWithPath(key), file), content)
 			}

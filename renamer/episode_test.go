@@ -52,7 +52,6 @@ func (s *MySuite) TestEpisodeExtractionFromDirectoryWithBetterFile(c *C) {
 	c.Assert(episode.Series, Equals, "HMM8p")
 
 	episode.FindBetterInformation()
-
 	c.Assert(episode.Name, Equals, "Platonish")
 	c.Assert(episode.Series, Equals, "How I Met Your Mother")
 }
@@ -69,15 +68,31 @@ func (s *MySuite) TestEpisodeExtractionFromDirectoryWithInvalidBetterFile(c *C) 
 	c.Assert(episode.Series, Equals, "HIMYM")
 }
 
+func (s *MySuite) TestEpisodePossibleSeriesNamesFromDirectory(c *C) {
+	episode, _ := CreateEpisodeFromPath(
+		path.Dir(s.FileWithPath("rules_of_engagement")))
+
+	names := episode.GetPossibleSeriesNames()
+	c.Assert(names, DeepEquals, []string{
+		"RoEG8p", "Rules of Engagement", "tvp egagement"})
+}
+
+func (s *MySuite) TestEpisodePossibleSeriesNamesFromFile(c *C) {
+	episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi"))
+
+	names := episode.GetPossibleSeriesNames()
+	c.Assert(names, DeepEquals, []string{"Criminal Minds"})
+}
+
 func (s *MySuite) TestEpisodeLanguageExtraction(c *C) {
 	episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi"))
-    c.Assert(episode.Language, Equals, "")
+	c.Assert(episode.Language, Equals, "")
 
 	episode, _ = CreateEpisodeFromPath(s.FileWithPath("chuck1"))
-    c.Assert(episode.Language, Equals, "de")
+	c.Assert(episode.Language, Equals, "de")
 
 	episode, _ = CreateEpisodeFromPath(s.FileWithPath("ncis"))
-    c.Assert(episode.Language, Equals, "de")
+	c.Assert(episode.Language, Equals, "de")
 }
 
 func (s *MySuite) TestEpisodeThatShouldntBeRenamable(c *C) {

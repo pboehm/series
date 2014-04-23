@@ -7,8 +7,9 @@ import (
 	"os"
 	GlobalPath "path"
 	"path/filepath"
-	"strconv"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 func CreateEpisodeFromPath(path string) (*Episode, error) {
@@ -79,14 +80,45 @@ func (self *Episode) CanBeRenamed() bool {
 }
 
 func (self *Episode) ExtractLanguage() {
-    pattern := regexp.MustCompile("(?i)German")
-    if pattern.Match([]byte(self.Name)) {
-        self.Language = "de"
-    }
+	pattern := regexp.MustCompile("(?i)German")
+	if pattern.Match([]byte(self.Name)) {
+		self.Language = "de"
+	}
 }
 
 func (self *Episode) RemoveTrashwords() {
 	self.Name = ApplyTrashwordsOnString(self.Name)
+}
+
+func (self *Episode) GetPossibleSeriesNames() []string {
+	possibilities := []string{self.Series}
+
+	if util.IsDirectory(self.Path) {
+		// Check all subdirectories and the episodefile itself for a suitable
+		// series name
+		episodepath := self.Path
+
+		// get the diff between self.Path and self.Episodefile so that we can
+		// add one path element a time and extract the series
+		subpath := self.Episodefile[len(episodepath):]
+
+		splits := strings.Split(subpath, "/")
+
+		for _, part := range splits {
+			if part == "" {
+				continue
+			}
+
+			episodepath = GlobalPath.Join(episodepath, part)
+
+			subepisode, suberr := CreateEpisodeFromPath(episodepath)
+			if suberr == nil {
+				possibilities = append(possibilities, subepisode.Series)
+			}
+		}
+	}
+
+	return possibilities
 }
 
 func (self *Episode) FindBetterInformation() {
