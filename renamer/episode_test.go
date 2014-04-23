@@ -45,29 +45,6 @@ func (s *MySuite) TestEpisodeExtractionFromDirectory(c *C) {
 	c.Assert(episode.CanBeRenamed(), Equals, true)
 }
 
-func (s *MySuite) TestEpisodeExtractionFromDirectoryWithBetterFile(c *C) {
-	episode, _ := CreateEpisodeFromPath(s.FileWithPath("himym"))
-
-	c.Assert(episode.Name, Equals, "")
-	c.Assert(episode.Series, Equals, "HMM8p")
-
-	episode.FindBetterInformation()
-	c.Assert(episode.Name, Equals, "Platonish")
-	c.Assert(episode.Series, Equals, "How I Met Your Mother")
-}
-
-func (s *MySuite) TestEpisodeExtractionFromDirectoryWithInvalidBetterFile(c *C) {
-	episode, _ := CreateEpisodeFromPath(s.FileWithPath("himym_not_matching"))
-
-	c.Assert(episode.Name, Equals, "")
-	c.Assert(episode.Series, Equals, "HIMYM")
-
-	episode.FindBetterInformation()
-
-	c.Assert(episode.Name, Equals, "")
-	c.Assert(episode.Series, Equals, "HIMYM")
-}
-
 func (s *MySuite) TestEpisodePossibleSeriesNamesFromDirectory(c *C) {
 	episode, _ := CreateEpisodeFromPath(
 		path.Dir(s.FileWithPath("rules_of_engagement")))

@@ -121,29 +121,6 @@ func (self *Episode) GetPossibleSeriesNames() []string {
 	return possibilities
 }
 
-func (self *Episode) FindBetterInformation() {
-	// check if the Episodefile contains more informations than we already have
-	// and set these informations
-	if util.IsDirectory(self.Path) {
-		subepisode, suberr := CreateEpisodeFromPath(self.Episodefile)
-		if suberr == nil {
-			subepisode.RemoveTrashwords()
-
-			if self.Season == subepisode.Season &&
-				self.Episode == subepisode.Episode {
-
-				if len(subepisode.Series) > len(self.Series) {
-					self.Series = subepisode.Series
-				}
-
-				if len(subepisode.Name) > len(self.Name) {
-					self.Name = subepisode.Name
-				}
-			}
-		}
-	}
-}
-
 func (self *Episode) Rename(dest_path string) error {
 	if !self.CanBeRenamed() {
 		return errors.New(
