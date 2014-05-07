@@ -148,6 +148,17 @@ func (s *MySuite) TestAddEpisodeWithoutLanguageToSeriesWithMultiLangPrev(c *C) {
 	c.Assert(episode.Language, Equals, "en")
 }
 
+func (s *MySuite) TestAddEpisodeWithCrappyFileInfos(c *C) {
+	episode := renamer.Episode{
+	    Series: "tvs tbbt dd51 ded dl 18p ithd avc", Season: 6,
+		Episode: 5, Name: "", Extension: ".mkv"}
+
+	added, err := s.index.AddEpisode(&episode)
+    c.Assert(added, Equals, false)
+    c.Assert(err, NotNil)
+	c.Assert(err, ErrorMatches, "Series does not exist in index")
+}
+
 func (s *MySuite) TestWriteIndexToFile(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
 		Name: "Testepisode", Extension: ".mkv", Language: "de"}

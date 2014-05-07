@@ -32,10 +32,10 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
         }
     }
 
-	if episode.Series == "" {
+	series, existing := self.seriesMap[episode.Series]
+	if ! existing {
 		return false, errors.New("Series does not exist in index")
 	}
-	series := self.seriesMap[episode.Series]
 
 	// Handle episodes where no language is set
 	if episode.Language == "" {
