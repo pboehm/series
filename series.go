@@ -120,7 +120,7 @@ func main() {
 	if APP_CONFIG.PreProcessingHook != "" {
 		fmt.Println("### Calling PreProcessingHook ...")
 
-		cmd := exec.Command("bash", "-c", APP_CONFIG.PreProcessingHook)
+		cmd := exec.Command("/bin/sh", "-c", APP_CONFIG.PreProcessingHook)
 		out, err := cmd.Output()
 		if err != nil {
 			fmt.Printf("PreProcessingHook ended with an error: %s\n", err)
@@ -162,7 +162,7 @@ func main() {
 					APP_CONFIG.EpisodeHook,
 					episode.CleanedFileName(), episode.Series)
 
-				cmd := exec.Command("bash", "-c", hook_cmd)
+				cmd := exec.Command("/bin/sh", "-c", hook_cmd)
 				out, err := cmd.Output()
 				if err != nil {
 					fmt.Printf("EpisodeHook ended with an error: %s\n", err)
@@ -175,7 +175,7 @@ func main() {
 		if APP_CONFIG.PostProcessingHook != "" {
 			fmt.Println("\n### Calling PostProcessingHook ...")
 
-			cmd := exec.Command("bash", "-c", APP_CONFIG.PostProcessingHook)
+			cmd := exec.Command("/bin/sh", "-c", APP_CONFIG.PostProcessingHook)
 			out, err := cmd.Output()
 			if err != nil {
 				fmt.Printf("PostProcessingHook ended with an error: %s\n", err)
