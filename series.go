@@ -89,6 +89,16 @@ func HandleInterestingEpisodes(index *index.SeriesIndex, entries []string) []*re
 	return renameable_episodes
 }
 
+// This executes the supplied cmd by /bin/sh and returns an error if it returns
+// unexpectedly
+func System(cmd_string string) error {
+
+    cmd := exec.Command("/bin/sh", "-c", cmd_string)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    return cmd.Run()
+}
+
 func main() {
 	setup()
 	APP_CONFIG = config.GetConfig(CONFIG_FILE, DEFAULT_CONFIG)
@@ -120,12 +130,10 @@ func main() {
 	if APP_CONFIG.PreProcessingHook != "" {
 		fmt.Println("### Calling PreProcessingHook ...")
 
-		cmd := exec.Command("/bin/sh", "-c", APP_CONFIG.PreProcessingHook)
-		out, err := cmd.Output()
+		err := System(APP_CONFIG.PreProcessingHook)
 		if err != nil {
 			fmt.Printf("PreProcessingHook ended with an error: %s\n", err)
 		}
-		fmt.Println(string(out))
 	}
 
 	fmt.Println("### Parsing series index ...")
@@ -162,12 +170,10 @@ func main() {
 					APP_CONFIG.EpisodeHook,
 					episode.CleanedFileName(), episode.Series)
 
-				cmd := exec.Command("/bin/sh", "-c", hook_cmd)
-				out, err := cmd.Output()
+				err := System(hook_cmd)
 				if err != nil {
 					fmt.Printf("EpisodeHook ended with an error: %s\n", err)
 				}
-				fmt.Println(string(out))
 			}
 		}
 
@@ -175,12 +181,10 @@ func main() {
 		if APP_CONFIG.PostProcessingHook != "" {
 			fmt.Println("\n### Calling PostProcessingHook ...")
 
-			cmd := exec.Command("/bin/sh", "-c", APP_CONFIG.PostProcessingHook)
-			out, err := cmd.Output()
+			err := System(APP_CONFIG.PostProcessingHook)
 			if err != nil {
 				fmt.Printf("PostProcessingHook ended with an error: %s\n", err)
 			}
-			fmt.Println(string(out))
 		}
 	}
 }
