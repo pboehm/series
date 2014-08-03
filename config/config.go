@@ -23,32 +23,32 @@ func GetConfig(config_file string, standard Config) Config {
 			panic(dir_err)
 		}
 
-        writeMarshaledDataToFile(config_file, standard)
+		writeMarshaledDataToFile(config_file, standard)
 	}
 
 	content, read_err := ioutil.ReadFile(config_file)
-    if read_err != nil {
-        panic(read_err)
-    }
+	if read_err != nil {
+		panic(read_err)
+	}
 
 	unmarshal_err := json.Unmarshal(content, &standard)
 	if unmarshal_err != nil {
 		panic(unmarshal_err)
 	}
 
-    writeMarshaledDataToFile(config_file, standard)
+	writeMarshaledDataToFile(config_file, standard)
 
 	return standard
 }
 
 func writeMarshaledDataToFile(file string, config Config) {
-    marshaled, marshal_err := json.MarshalIndent(config, "", "  ")
-    if marshal_err != nil {
-        panic(marshal_err)
-    }
+	marshaled, marshal_err := json.MarshalIndent(config, "", "  ")
+	if marshal_err != nil {
+		panic(marshal_err)
+	}
 
-    write_err := ioutil.WriteFile(file, marshaled, 0644)
-    if write_err != nil {
-        panic(write_err)
-    }
+	write_err := ioutil.WriteFile(file, marshaled, 0644)
+	if write_err != nil {
+		panic(write_err)
+	}
 }

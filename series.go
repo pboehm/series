@@ -93,10 +93,10 @@ func HandleInterestingEpisodes(index *index.SeriesIndex, entries []string) []*re
 // unexpectedly
 func System(cmd_string string) error {
 
-    cmd := exec.Command("/bin/sh", "-c", cmd_string)
-    cmd.Stdout = os.Stdout
-    cmd.Stderr = os.Stderr
-    return cmd.Run()
+	cmd := exec.Command("/bin/sh", "-c", cmd_string)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 func main() {

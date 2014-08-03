@@ -11,34 +11,38 @@ import (
 	"strings"
 )
 
-var Patterns = []*regexp.Regexp{
-	// S01E01
-	regexp.MustCompile(
-		"^(?i)(?P<series>.*)S(?P<season>\\d+)E(?P<episode>\\d+)(?P<episodename>.*)$"),
+var (
+	Patterns = []*regexp.Regexp{
+		// S01E01
+		regexp.MustCompile(
+			"^(?i)(?P<series>.*)S(?P<season>\\d+)E(?P<episode>\\d+)(?P<episodename>.*)$"),
 
-	// 101; 1212
-	regexp.MustCompile(
-		"^(?i)(?P<series>.*\\D)(?P<season>\\d+)(?P<episode>\\d{2})(?P<episodename>\\W*.*)$"),
+		// 101; 1212
+		regexp.MustCompile(
+			"^(?i)(?P<series>.*\\D)(?P<season>\\d+)(?P<episode>\\d{2})(?P<episodename>\\W*.*)$"),
 
-	// 1x1; 12x12
-	regexp.MustCompile(
-		"^(?i)(?P<series>.*)(?P<season>\\d+)x(?P<episode>\\d+)(?P<episodename>.*)$"),
-}
+		// 1x1; 12x12
+		regexp.MustCompile(
+			"^(?i)(?P<series>.*)(?P<season>\\d+)x(?P<episode>\\d+)(?P<episodename>.*)$"),
+	}
 
-var VideoFileEndings = []string{
-	"mpg", "mpeg", "avi", "mkv", "wmv", "mp4", "mov", "flv", "3gp", "ts",
-}
+	MultipleWhitespacePattern = regexp.MustCompile("\\s+")
 
-var TrashWords = []string{
-	"German", "Dubbed", "DVDRip", "HDTVRip", "XviD", "ITG", "TVR", "inspired",
-	"HDRip", "AMBiTiOUS", "RSG", "SiGHT", "SATRip", "WS", "TVS", "RiP", "READ",
-	"GERMAN", "dTV", "aTV", "iNTERNAL", "CRoW", "MSE", "c0nFuSed", "UTOPiA",
-	"scum", "EXPiRED", "BDRiP", "HDTV", "iTunesHD", "720p", "x264", "h264",
-	"CRiSP", "euHD", "WEBRiP", "ZZGtv", "ARCHiV", "DD20", "Prim3time", "Nfo",
-	"Repack", "SiMPTY", "BLURAYRiP", "BluRay", "DELiCiOUS", "Synced",
-	"UNDELiCiOUS", "fBi", "CiD", "iTunesHDRip", "RedSeven", "OiNK", "idTV",
-	"DL", "DD51", "AC3", "1080p", "WEB", "DD5",
-}
+	VideoFileEndings = []string{
+		"mpg", "mpeg", "avi", "mkv", "wmv", "mp4", "mov", "flv", "3gp", "ts",
+	}
+
+	TrashWords = []string{
+		"German", "Dubbed", "DVDRip", "HDTVRip", "XviD", "ITG", "TVR", "inspired",
+		"HDRip", "AMBiTiOUS", "RSG", "SiGHT", "SATRip", "WS", "TVS", "RiP", "READ",
+		"GERMAN", "dTV", "aTV", "iNTERNAL", "CRoW", "MSE", "c0nFuSed", "UTOPiA",
+		"scum", "EXPiRED", "BDRiP", "HDTV", "iTunesHD", "720p", "x264", "h264",
+		"CRiSP", "euHD", "WEBRiP", "ZZGtv", "ARCHiV", "DD20", "Prim3time", "Nfo",
+		"Repack", "SiMPTY", "BLURAYRiP", "BluRay", "DELiCiOUS", "Synced",
+		"UNDELiCiOUS", "fBi", "CiD", "iTunesHDRip", "RedSeven", "OiNK", "idTV",
+		"DL", "DD51", "AC3", "1080p", "WEB", "DD5",
+	}
+)
 
 func HasVideoFileEnding(entry_path string) bool {
 	extension := path.Ext(entry_path)
@@ -152,8 +156,11 @@ func ExtractEpisodeInformation(entry string) map[string]string {
 }
 
 func CleanEpisodeInformation(info string) string {
-	return strings.TrimSpace(
-		strings.Replace(
-			strings.Replace(info, "-", " ", -1),
-			".", " ", -1))
+	cleaned := strings.Replace(
+		strings.Replace(info, "-", " ", -1),
+		".", " ", -1)
+
+	cleaned = string(
+		MultipleWhitespacePattern.ReplaceAll([]byte(cleaned), []byte(" ")))
+	return strings.TrimSpace(cleaned)
 }

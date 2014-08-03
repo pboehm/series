@@ -136,6 +136,9 @@ func (s *MySuite) TestEpisodeInformationCleanup(c *C) {
 		Equals, "Criminal Minds")
 	c.Assert(CleanEpisodeInformation("GERMAN.DUBBED.DL.WEB-DL"),
 		Equals, "GERMAN DUBBED DL WEB DL")
+
+	c.Assert(CleanEpisodeInformation("Silk.-.Roben.aus.Seide"),
+		Equals, "Silk Roben aus Seide")
 }
 
 func (s *MySuite) TestInterestingFiles(c *C) {
