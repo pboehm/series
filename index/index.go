@@ -69,6 +69,51 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 		errors.New("Episode couldn't be added to index. This shouldn't occur!")
 }
 
+func (self *SeriesIndex) AddSeries(seriesname, language string) (bool, error) {
+
+	_, existing := self.seriesMap[seriesname]
+	if existing {
+		return false, errors.New("Series does already exist in index")
+	}
+
+	series := Series{
+		Name: seriesname,
+		EpisodeSets: []EpisodeSet{
+			EpisodeSet{
+				Language: language,
+				EpisodeList: []Episode{
+					Episode{Name: "S01E00 - Pre-Pilot.mkv"},
+				},
+			},
+		},
+	}
+
+	self.SeriesList = append(self.SeriesList, series)
+	self.seriesMap[seriesname] = &series
+
+	return true, nil
+}
+
+func (self *SeriesIndex) RemoveSeries(seriesname string) (bool, error) {
+
+	series, existing := self.seriesMap[seriesname]
+	if !existing {
+		return false, errors.New("Series does not exist in index")
+	}
+
+	for i := 0; i < len(self.SeriesList); i++ {
+		if self.SeriesList[i].Name == series.Name {
+			self.SeriesList = append(
+				self.SeriesList[:i],
+				self.SeriesList[i+1:]...,
+			)
+			break
+		}
+	}
+
+	return true, nil
+}
+
 func (self *SeriesIndex) GuessEpisodeLanguage(episode *renamer.Episode, series *Series) {
 	// This methods tries to find the right language for the supplied episode
 	// based on several heuristics
