@@ -14,7 +14,7 @@ func HandleError(err error) {
 	}
 }
 
-var ConfigDirectory, ConfigFile string
+var ConfigDirectory, ConfigFile, CustomEpisodeDirectory string
 var DefaultConfig, AppConfig config.Config
 
 func setupConfig() {
@@ -31,12 +31,18 @@ func setupConfig() {
 
 var seriesCmd = &cobra.Command{
 	Use: "series",
+	Run: renameAndIndexHandler,
+}
+
+func init() {
+	seriesCmd.PersistentFlags().StringVarP(&CustomEpisodeDirectory, "dir", "d", "",
+		"The directory which includes the episodes. (Overrides the config value)")
 }
 
 func main() {
 	setupConfig()
 
-	seriesCmd.AddCommand(renameCmd, indexCmd)
+	seriesCmd.AddCommand(renameAndIndexCmd, indexCmd)
 	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, listIndexCmd)
 	seriesCmd.Execute()
 }

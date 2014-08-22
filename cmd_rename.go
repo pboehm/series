@@ -6,28 +6,24 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"os"
-	"path"
 	"regexp"
 )
 
-var RenameEpisodes bool
+var RenameEpisodes, AddToIndex bool
 
-var renameCmd = &cobra.Command{
+var renameAndIndexCmd = &cobra.Command{
 	Use:   "rename_and_index",
 	Short: "Renames and indexes the supplied episodes.",
 	Run:   renameAndIndexHandler,
 }
 
 func renameAndIndexHandler(cmd *cobra.Command, args []string) {
-
-	// change to the series directory
-	dir := path.Join(AppConfig.EpisodeDirectory)
-	if len(args) > 0 {
-		dir = args[0]
+	dir := AppConfig.EpisodeDirectory
+	if CustomEpisodeDirectory != "" {
+		dir = CustomEpisodeDirectory
 	}
 	HandleError(os.Chdir(dir))
 
-	// get all interesting episodes and stop if there aren't any
 	interesting_entries := GetInterestingDirEntries()
 	if len(interesting_entries) == 0 {
 		os.Exit(0)
@@ -106,12 +102,14 @@ func HandleInterestingEpisodes(entries []string) []*renamer.Episode {
 			continue
 		}
 
-		added, added_err := SeriesIndex.AddEpisode(episode)
-		if !added {
-			fmt.Printf("!!! couldn't be added to the index: %s\n\n", added_err)
-			continue
+		if AddToIndex {
+			added, added_err := SeriesIndex.AddEpisode(episode)
+			if !added {
+				fmt.Printf("!!! couldn't be added to the index: %s\n\n", added_err)
+				continue
+			}
+			fmt.Println("---> succesfully added to series index\n")
 		}
-		fmt.Println("---> succesfully added to series index\n")
 
 		renameable_episodes = append(renameable_episodes, episode)
 	}
@@ -120,6 +118,13 @@ func HandleInterestingEpisodes(entries []string) []*renamer.Episode {
 }
 
 func init() {
-	renameCmd.Flags().BoolVarP(&RenameEpisodes, "rename", "r", true,
+	renameAndIndexCmd.Flags().BoolVarP(&RenameEpisodes, "rename", "r", true,
 		"Do actually rename the episodes.")
+	renameAndIndexCmd.Flags().BoolVarP(&AddToIndex, "index", "i", true,
+		"Add the episodes to index.")
+
+	indexCmd.Flags().BoolVarP(&RenameEpisodes, "rename", "r", true,
+		"Do actually rename the episodes.")
+	indexCmd.Flags().BoolVarP(&AddToIndex, "index", "i", true,
+		"Add the episodes to index.")
 }
