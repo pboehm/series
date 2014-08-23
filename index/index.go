@@ -57,11 +57,7 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 	set, exist := series.languageMap[episode.Language]
 	if exist {
 		set.EpisodeList = append(set.EpisodeList, episode_entry)
-
-		// add it to the lookup cache
-		key := GetIndexKey(episode.Season, episode.Episode)
-		set.episodeMap[key] = episode_entry.Name
-
+		set.BuildUpEpisodeMap()
 		return true, nil
 	}
 
@@ -89,7 +85,7 @@ func (self *SeriesIndex) AddSeries(seriesname, language string) (bool, error) {
 	}
 
 	self.SeriesList = append(self.SeriesList, series)
-	self.seriesMap[seriesname] = &series
+	self.BuildUpSeriesMap()
 
 	return true, nil
 }
@@ -107,11 +103,30 @@ func (self *SeriesIndex) RemoveSeries(seriesname string) (bool, error) {
 				self.SeriesList[:i],
 				self.SeriesList[i+1:]...,
 			)
+			self.BuildUpSeriesMap()
 			break
 		}
 	}
 
 	return true, nil
+}
+
+func (self *SeriesIndex) AliasSeries(seriesname string, alias string) error {
+
+	series, existing := self.seriesMap[seriesname]
+	if !existing {
+		return errors.New("Series does not exist in index")
+	}
+
+	_, alias_existing := self.seriesMap[alias]
+	if alias_existing {
+		return errors.New("Alias does already exist as series in index")
+	}
+
+	series.Aliases = append(series.Aliases, Alias{To: alias})
+	series.BuildUpLanguageMap()
+
+	return nil
 }
 
 func (self *SeriesIndex) GuessEpisodeLanguage(episode *renamer.Episode, series *Series) {

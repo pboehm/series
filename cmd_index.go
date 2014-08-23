@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/pboehm/series/index"
 	"github.com/spf13/cobra"
+	"os"
 )
 
 var SeriesIndex *index.SeriesIndex
@@ -67,6 +68,34 @@ var removeIndexCmd = &cobra.Command{
 			if err != nil {
 				fmt.Printf(
 					"!!! Removing series from index wasn't possible: %s\n", err)
+			}
+		}
+
+		writeIndex()
+		callPostProcessingHook()
+	},
+}
+
+var aliasIndexCmd = &cobra.Command{
+	Use:   "alias series [alias, ...]",
+	Short: "Aliases the given series to the supplied aliases",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) < 2 {
+			fmt.Println("You have to supply one series name and some aliases")
+			cmd.Usage()
+			os.Exit(1)
+		}
+
+		callPreProcessingHook()
+		loadIndex()
+
+		series, args := args[0], args[1:]
+
+		for _, alias := range args {
+			fmt.Printf("Aliasing '%s' to '%s'\n", series, alias)
+			err := SeriesIndex.AliasSeries(series, alias)
+			if err != nil {
+				fmt.Printf("!!! Unable to alias the series: %s\n", err)
 			}
 		}
 

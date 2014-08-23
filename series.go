@@ -43,6 +43,6 @@ func main() {
 	setupConfig()
 
 	seriesCmd.AddCommand(renameAndIndexCmd, indexCmd)
-	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, listIndexCmd)
+	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, aliasIndexCmd, listIndexCmd)
 	seriesCmd.Execute()
 }
