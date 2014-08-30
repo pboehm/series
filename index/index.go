@@ -15,20 +15,32 @@ import (
 var DefaultLanguage = "de"
 
 type SeriesIndex struct {
-	XMLName    xml.Name `xml:"seriesindex"`
-	SeriesList []Series `xml:"series"`
-	seriesMap  map[string]*Series
+	XMLName        xml.Name `xml:"seriesindex"`
+	SeriesList     []Series `xml:"series"`
+	seriesMap      map[string]*Series
+	nameExtractors []SeriesNameExtractor
+}
+
+// AddExtractor adds another SeriesNameExtractor for generating possible series
+// names. Extractors get called in order order of addition.
+func (self *SeriesIndex) AddExtractor(ex SeriesNameExtractor) {
+	self.nameExtractors = append(self.nameExtractors, ex)
 }
 
 func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 
 	// test for all possible series names if they exist in index and take the
 	// first matching
-	for _, possible_series := range episode.GetPossibleSeriesNames() {
-		series_name := self.SeriesNameInIndex(possible_series)
-		if series_name != "" {
-			episode.Series = series_name
-			break
+ExtractorLoop:
+	for _, extractor := range self.nameExtractors {
+		names, _ := extractor.Names(episode)
+
+		for _, possible_series := range names {
+			series_name := self.SeriesNameInIndex(possible_series)
+			if series_name != "" {
+				episode.Series = series_name
+				break ExtractorLoop
+			}
 		}
 	}
 

@@ -159,6 +159,28 @@ func (s *MySuite) TestAddEpisodeWithCrappyFileInfos(c *C) {
 	c.Assert(err, ErrorMatches, "Series does not exist in index")
 }
 
+type mockExtractor struct {
+	names []string
+}
+
+func (self mockExtractor) Names(*renamer.Episode) ([]string, error) {
+	return self.names, nil
+}
+
+func (s *MySuite) TestSeriesNameExtractor(c *C) {
+	s.index.AddExtractor(mockExtractor{names: []string{
+		"Should-Also-Not-Exist", "Shameless US"}})
+
+	episode := renamer.Episode{Series: "this-should-not-exist",
+		Season: 1, Episode: 9, Name: "Testepisode", Extension: ".mkv",
+		Language: "de"}
+
+	added, err := s.index.AddEpisode(&episode)
+	c.Assert(err, IsNil)
+	c.Assert(added, Equals, true)
+	c.Assert(episode.Series, Equals, "Shameless US")
+}
+
 func (s *MySuite) TestWriteIndexToFile(c *C) {
 	episode := renamer.Episode{Series: "Shameless US", Season: 1, Episode: 9,
 		Name: "Testepisode", Extension: ".mkv", Language: "de"}

@@ -16,6 +16,9 @@ func loadIndex() {
 	var err error
 	SeriesIndex, err = index.ParseSeriesIndex(AppConfig.IndexFile)
 	HandleError(err)
+
+	// add each SeriesNameExtractor
+	SeriesIndex.AddExtractor(index.FilesystemExtractor{})
 }
 
 func writeIndex() {

@@ -45,22 +45,6 @@ func (s *MySuite) TestEpisodeExtractionFromDirectory(c *C) {
 	c.Assert(episode.CanBeRenamed(), Equals, true)
 }
 
-func (s *MySuite) TestEpisodePossibleSeriesNamesFromDirectory(c *C) {
-	episode, _ := CreateEpisodeFromPath(
-		path.Dir(s.FileWithPath("rules_of_engagement")))
-
-	names := episode.GetPossibleSeriesNames()
-	c.Assert(names, DeepEquals, []string{
-		"RoEG8p", "Rules of Engagement", "tvp egagement"})
-}
-
-func (s *MySuite) TestEpisodePossibleSeriesNamesFromFile(c *C) {
-	episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi"))
-
-	names := episode.GetPossibleSeriesNames()
-	c.Assert(names, DeepEquals, []string{"Criminal Minds"})
-}
-
 func (s *MySuite) TestEpisodeLanguageExtraction(c *C) {
 	episode, _ := CreateEpisodeFromPath(s.FileWithPath("crmi"))
 	c.Assert(episode.Language, Equals, "")
