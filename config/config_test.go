@@ -25,7 +25,7 @@ func (s *MySuite) TestConfigParsingWhenNoConfigExists(c *C) {
 	standard := Config{}
 	config := GetConfig(s.config_file, standard)
 
-	c.Assert(config, Equals, standard)
+	c.Assert(config, DeepEquals, standard)
 	c.Assert(util.PathExists(s.config_file), Equals, true)
 }
 
