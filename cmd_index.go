@@ -19,6 +19,10 @@ func loadIndex() {
 
 	// add each SeriesNameExtractor
 	SeriesIndex.AddExtractor(index.FilesystemExtractor{})
+
+	for _, script := range AppConfig.ScriptExtractors {
+		SeriesIndex.AddExtractor(index.ScriptExtractor{ScriptPath: script})
+	}
 }
 
 func writeIndex() {

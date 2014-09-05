@@ -1,8 +1,10 @@
 package index
 
 import (
+	"fmt"
 	"github.com/pboehm/series/renamer"
 	"github.com/pboehm/series/util"
+	"os/exec"
 	"path"
 	"strings"
 )
@@ -42,4 +44,21 @@ func (self FilesystemExtractor) Names(epi *renamer.Episode) ([]string, error) {
 	}
 
 	return possibilities, nil
+}
+
+type ScriptExtractor struct {
+	ScriptPath string
+}
+
+func (self ScriptExtractor) Names(epi *renamer.Episode) ([]string, error) {
+	script := fmt.Sprintf("%s \"%s\" %d_%d",
+		self.ScriptPath, epi.Episodefile, epi.Season, epi.Episode)
+	cmd := exec.Command("/bin/sh", "-c", script)
+
+	output, err := cmd.Output()
+	if err != nil {
+		return []string{}, err
+	}
+
+	return strings.Split(string(output), "\n"), nil
 }

@@ -11,6 +11,7 @@ import (
 type Config struct {
 	IndexFile, PreProcessingHook, PostProcessingHook, EpisodeHook string
 	EpisodeDirectory                                              string
+	ScriptExtractors                                              []string
 }
 
 func GetConfig(config_file string, standard Config) Config {

@@ -33,7 +33,12 @@ func (self *SeriesIndex) AddEpisode(episode *renamer.Episode) (bool, error) {
 	// first matching
 ExtractorLoop:
 	for _, extractor := range self.nameExtractors {
-		names, _ := extractor.Names(episode)
+		names, err := extractor.Names(episode)
+
+		if err != nil {
+			fmt.Printf("!!! Error asking extractor for series names: %s", err)
+			continue
+		}
 
 		for _, possible_series := range names {
 			series_name := self.SeriesNameInIndex(possible_series)

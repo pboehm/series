@@ -24,6 +24,7 @@ func setupConfig() {
 	DefaultConfig = config.Config{
 		EpisodeDirectory: path.Join(util.HomeDirectory(), "Downloads"),
 		IndexFile:        path.Join(ConfigDirectory, "index.xml"),
+		ScriptExtractors: []string{},
 	}
 
 	AppConfig = config.GetConfig(ConfigFile, DefaultConfig)
