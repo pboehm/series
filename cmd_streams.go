@@ -46,10 +46,16 @@ var streamsFetchLinksCmd = &cobra.Command{
 			grouped := linkSet.GroupedEntries()
 
 			for group, groupedEntries := range grouped {
-				fmt.Printf(">> Episodes for %s\n", group)
+				fmt.Printf(">>>> %s\n", group)
 				for _, entry := range groupedEntries {
-					link := entry.Links[0]
-					fmt.Printf("%s - %s  [%s]\n", entry.Id, link.Link, link.Hoster)
+					fmt.Printf(">> %s [%s]\n", entry.Filename, entry.Id)
+
+					for i, link := range entry.Links {
+						if i >= 2 {
+							break
+						}
+						fmt.Printf("  %s\t  [%s]\n", link.Link, link.Hoster)
+					}
 				}
 			}
 		})

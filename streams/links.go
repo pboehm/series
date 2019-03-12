@@ -19,6 +19,7 @@ type LinkSetEntry struct {
 	Language string              `json:"language"`
 	Season   int                 `json:"season"`
 	Episode  int                 `json:"episode"`
+	Filename string              `json:"filename"`
 	Links    []*LinkSetEntryLink `json:"links"`
 }
 
@@ -50,14 +51,14 @@ func (l *LinkSet) GrabLinksFor(watched []WatchedSeries) {
 				}
 
 				if !l.index.IsEpisodeInIndexManual(series.SeriesNameInIndex, language, episode.Season, episode.Episode) {
-					l.notifyNewEpisode(series, language, episode, links)
+					l.addEpisode(series, language, episode, links)
 				}
 			}
 		}
 	}
 }
 
-func (l *LinkSet) notifyNewEpisode(series WatchedSeries, language string, episode *Episode, links []*Link) {
+func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Episode, links []*Link) {
 	var entryLinks []*LinkSetEntryLink
 	for _, link := range links {
 		entryLinks = append(entryLinks, &LinkSetEntryLink{
@@ -66,12 +67,24 @@ func (l *LinkSet) notifyNewEpisode(series WatchedSeries, language string, episod
 		})
 	}
 
+	id, _ := NewIdentifier(series.SeriesNameInIndex, language, episode.Season, episode.Episode).AsString()
+
+	episodeName := ""
+	switch language {
+	case "de":
+		episodeName = episode.German
+	case "en":
+		episodeName = episode.English
+	default:
+	}
+
 	episodeLink := &LinkSetEntry{
-		Id:       fmt.Sprintf("S%02dE%02d", episode.Season, episode.Episode),
+		Id:       id,
 		Series:   series.SeriesNameInIndex,
 		Language: language,
 		Season:   episode.Season,
 		Episode:  episode.Episode,
+		Filename: fmt.Sprintf("S%02dE%02d - %s.mov", episode.Season, episode.Episode, episodeName),
 		Links:    entryLinks,
 	}
 
@@ -102,4 +115,3 @@ func (l *LinkSet) GroupedEntries() map[string][]*LinkSetEntry {
 
 	return grouped
 }
-
