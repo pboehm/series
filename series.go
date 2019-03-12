@@ -5,12 +5,15 @@ import (
 	"github.com/pboehm/series/util"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
 	"path"
 )
 
+var LOG = log.New(os.Stderr, "", 0)
+
 func HandleError(err error) {
 	if err != nil {
-		log.Fatal(err)
+		LOG.Fatal(err)
 	}
 }
 

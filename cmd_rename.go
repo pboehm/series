@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/pboehm/series/renamer"
 	"github.com/spf13/cobra"
 	"io/ioutil"
@@ -32,19 +31,19 @@ func renameAndIndexHandler(cmd *cobra.Command, args []string) {
 	callPreProcessingHook()
 	loadIndex()
 
-	fmt.Println("### Process all interesting files ...")
+	LOG.Println("### Process all interesting files ...")
 	renameableEpisodes := HandleInterestingEpisodes(interestingEntries)
 
 	if len(renameableEpisodes) > 0 && renameEpisodes {
 		writeIndex()
 
-		fmt.Println("### Renaming episodes ...")
+		LOG.Println("### Renaming episodes ...")
 
 		for _, episode := range renameableEpisodes {
-			fmt.Printf("> %s: %s", episode.Series, episode.CleanedFileName())
+			LOG.Printf("> %s: %s", episode.Series, episode.CleanedFileName())
 
 			HandleError(episode.Rename("."))
-			fmt.Printf("  [OK]\n")
+			LOG.Printf("  [OK]\n")
 
 			callEpisodeHook(episode.CleanedFileName(), episode.Series)
 		}
@@ -85,7 +84,7 @@ func HandleInterestingEpisodes(entries []string) []*renamer.Episode {
 
 		episode, err := renamer.CreateEpisodeFromPath(entryPath)
 		if err != nil {
-			fmt.Printf("!!! '%s' - %s\n\n", entryPath, err)
+			LOG.Printf("!!! '%s' - %s\n\n", entryPath, err)
 			continue
 		}
 
@@ -94,21 +93,21 @@ func HandleInterestingEpisodes(entries []string) []*renamer.Episode {
 			episode.SetDefaultEpisodeName()
 		}
 
-		fmt.Printf("<<< %s\n", entryPath)
-		fmt.Printf(">>> %s\n", episode.CleanedFileName())
+		LOG.Printf("<<< %s\n", entryPath)
+		LOG.Printf(">>> %s\n", episode.CleanedFileName())
 
 		if !episode.CanBeRenamed() {
-			fmt.Printf("!!! '%s' is currently not renameable\n\n", entryPath)
+			LOG.Printf("!!! '%s' is currently not renameable\n\n", entryPath)
 			continue
 		}
 
 		if addToIndex {
 			added, addedErr := seriesIndex.AddEpisode(episode)
 			if !added {
-				fmt.Printf("!!! couldn't be added to the index: %s\n\n", addedErr)
+				LOG.Printf("!!! couldn't be added to the index: %s\n\n", addedErr)
 				continue
 			}
-			fmt.Printf("---> succesfully added to series index\n\n")
+			LOG.Printf("---> succesfully added to series index\n\n")
 		}
 
 		renameableEpisodes = append(renameableEpisodes, episode)

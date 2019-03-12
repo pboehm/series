@@ -11,7 +11,7 @@ var seriesIndex *index.SeriesIndex
 var newSeriesLanguage string
 
 func loadIndex() {
-	fmt.Println("### Parsing series index ...")
+	LOG.Println("### Parsing series index ...")
 
 	var err error
 	seriesIndex, err = index.ParseSeriesIndex(appConfig.IndexFile)
@@ -26,7 +26,7 @@ func loadIndex() {
 }
 
 func writeIndex() {
-	fmt.Println("### Writing new index version ...")
+	LOG.Println("### Writing new index version ...")
 	seriesIndex.WriteToFile(appConfig.IndexFile)
 }
 
@@ -45,11 +45,11 @@ var addIndexCmd = &cobra.Command{
 		callPreProcessingHook()
 		loadIndex()
 
-		for _, seriesname := range args {
+		for _, seriesName := range args {
 			fmt.Printf("Creating new index entry for '%s' [%s]\n",
-				seriesname, newSeriesLanguage)
+				seriesName, newSeriesLanguage)
 
-			_, err := seriesIndex.AddSeries(seriesname, newSeriesLanguage)
+			_, err := seriesIndex.AddSeries(seriesName, newSeriesLanguage)
 			if err != nil {
 				fmt.Printf(
 					"!!! Adding new index entry wasn't possible: %s\n", err)
@@ -68,13 +68,12 @@ var removeIndexCmd = &cobra.Command{
 		callPreProcessingHook()
 		loadIndex()
 
-		for _, seriesname := range args {
-			fmt.Printf("Removing '%s' from index\n", seriesname)
+		for _, seriesName := range args {
+			LOG.Printf("Removing '%s' from index\n", seriesName)
 
-			_, err := seriesIndex.RemoveSeries(seriesname)
+			_, err := seriesIndex.RemoveSeries(seriesName)
 			if err != nil {
-				fmt.Printf(
-					"!!! Removing series from index wasn't possible: %s\n", err)
+				LOG.Printf("!!! Removing series from index wasn't possible: %s\n", err)
 			}
 		}
 
@@ -88,7 +87,7 @@ var aliasIndexCmd = &cobra.Command{
 	Short: "Aliases the given series to the supplied aliases",
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 2 {
-			fmt.Println("You have to supply one series name and some aliases")
+			LOG.Println("You have to supply one series name and some aliases")
 			cmd.Usage()
 			os.Exit(1)
 		}
@@ -99,10 +98,10 @@ var aliasIndexCmd = &cobra.Command{
 		series, args := args[0], args[1:]
 
 		for _, alias := range args {
-			fmt.Printf("Aliasing '%s' to '%s'\n", series, alias)
+			LOG.Printf("Aliasing '%s' to '%s'\n", series, alias)
 			err := seriesIndex.AliasSeries(series, alias)
 			if err != nil {
-				fmt.Printf("!!! Unable to alias the series: %s\n", err)
+				LOG.Printf("!!! Unable to alias the series: %s\n", err)
 			}
 		}
 

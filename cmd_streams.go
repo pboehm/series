@@ -30,7 +30,7 @@ var streamsUnknownSeriesCmd = &cobra.Command{
 			}
 
 			for _, series := range existingSeries {
-				fmt.Printf("Series is unknown by streaming site: %s\n", series.Name)
+				fmt.Println(series.Name)
 			}
 		})
 	},
