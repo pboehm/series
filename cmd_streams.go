@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
@@ -20,7 +21,7 @@ var streamsCmd = &cobra.Command{
 
 var streamsUnknownSeriesCmd = &cobra.Command{
 	Use:   "unknown",
-	Short: "List all series which are unknown by the streaming site",
+	Short: "list all series which are unknown by the streaming site",
 	Run: func(cmd *cobra.Command, args []string) {
 		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
 			existingSeries := map[string]idx.Series{}
@@ -41,7 +42,7 @@ var streamsUnknownSeriesCmd = &cobra.Command{
 
 var streamsFetchLinksCmd = &cobra.Command{
 	Use:   "links",
-	Short: "Fetch Links for unwatched episodes of series",
+	Short: "fetch Links for unwatched episodes of series",
 	Run: func(cmd *cobra.Command, args []string) {
 		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
 			linkSet := str.NewLinkSet(appConfig, streams, index)
@@ -68,6 +69,34 @@ var streamsFetchLinksCmd = &cobra.Command{
 					}
 				}
 			}
+		})
+	},
+}
+
+var streamsServerCmd = &cobra.Command{
+	Use:   "server",
+	Short: "run an HTTP server serving an API and a frontend for streams",
+	Run: func(cmd *cobra.Command, args []string) {
+		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
+			linkSet := str.NewLinkSet(appConfig, streams, index)
+			linkSet.GrabLinksFor(watched)
+
+			r := gin.Default()
+			r.SetHTMLTemplate(str.ServerStaticHtmlTemplate)
+			r.GET("/", func(c *gin.Context) {
+				c.HTML(200, "index", gin.H{})
+			})
+			r.GET("/api/links", func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"links": linkSet.Entries(),
+				})
+			})
+			r.GET("/api/links/grouped", func(c *gin.Context) {
+				c.JSON(200, gin.H{
+					"links": linkSet.GroupedEntries(),
+				})
+			})
+			HandleError(r.Run())
 		})
 	},
 }
@@ -115,5 +144,5 @@ func mapLanguagesToIds(languages []string) map[string]int {
 func init() {
 	streamsFetchLinksCmd.Flags().BoolVarP(&streamsCmdJsonOutput, "json", "j", false, "output as JSON")
 
-	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd)
+	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsServerCmd)
 }
