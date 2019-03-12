@@ -14,13 +14,14 @@ type LinkSetEntryLink struct {
 }
 
 type LinkSetEntry struct {
-	Id       string              `json:"id"`
-	Series   string              `json:"series"`
-	Language string              `json:"language"`
-	Season   int                 `json:"season"`
-	Episode  int                 `json:"episode"`
-	Filename string              `json:"filename"`
-	Links    []*LinkSetEntryLink `json:"links"`
+	Id          string              `json:"id"`
+	Series      string              `json:"series"`
+	Language    string              `json:"language"`
+	Season      int                 `json:"season"`
+	Episode     int                 `json:"episode"`
+	EpisodeName string              `json:"episode_name"`
+	Filename    string              `json:"filename"`
+	Links       []*LinkSetEntryLink `json:"links"`
 }
 
 type LinkSet struct {
@@ -84,13 +85,14 @@ func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Epi
 	}
 
 	episodeLink := &LinkSetEntry{
-		Id:       id,
-		Series:   series.SeriesNameInIndex,
-		Language: language,
-		Season:   episode.Season,
-		Episode:  episode.Episode,
-		Filename: fmt.Sprintf("S%02dE%02d - %s.mov", episode.Season, episode.Episode, episodeName),
-		Links:    entryLinks,
+		Id:          id,
+		Series:      series.SeriesNameInIndex,
+		Language:    language,
+		Season:      episode.Season,
+		Episode:     episode.Episode,
+		EpisodeName: episodeName,
+		Filename:    fmt.Sprintf("S%02dE%02d - %s.mov", episode.Season, episode.Episode, episodeName),
+		Links:       entryLinks,
 	}
 
 	l.episodeLinks = append(l.episodeLinks, episodeLink)
