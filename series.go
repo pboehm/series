@@ -14,20 +14,20 @@ func HandleError(err error) {
 	}
 }
 
-var ConfigDirectory, ConfigFile, CustomEpisodeDirectory string
-var DefaultConfig, AppConfig config.Config
+var configDirectory, configFile, customEpisodeDirectory string
+var defaultConfig, appConfig config.Config
 
 func setupConfig() {
-	ConfigDirectory = path.Join(util.HomeDirectory(), ".series")
-	ConfigFile = path.Join(ConfigDirectory, "config.json")
+	configDirectory = path.Join(util.HomeDirectory(), ".series")
+	configFile = path.Join(configDirectory, "config.json")
 
-	DefaultConfig = config.Config{
+	defaultConfig = config.Config{
 		EpisodeDirectory: path.Join(util.HomeDirectory(), "Downloads"),
-		IndexFile:        path.Join(ConfigDirectory, "index.xml"),
+		IndexFile:        path.Join(configDirectory, "index.xml"),
 		ScriptExtractors: []string{},
 	}
 
-	AppConfig = config.GetConfig(ConfigFile, DefaultConfig)
+	appConfig = config.GetConfig(configFile, defaultConfig)
 }
 
 var seriesCmd = &cobra.Command{
@@ -36,7 +36,7 @@ var seriesCmd = &cobra.Command{
 }
 
 func init() {
-	seriesCmd.PersistentFlags().StringVarP(&CustomEpisodeDirectory, "dir", "d", "",
+	seriesCmd.PersistentFlags().StringVarP(&customEpisodeDirectory, "dir", "d", "",
 		"The directory which includes the episodes. (Overrides the config value)")
 }
 

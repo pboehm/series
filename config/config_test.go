@@ -12,30 +12,30 @@ func Test(t *testing.T) { TestingT(t) }
 var _ = Suite(&MySuite{})
 
 type MySuite struct {
-	dir         string
-	config_file string
+	dir        string
+	configFile string
 }
 
 func (s *MySuite) SetUpTest(c *C) {
 	s.dir = c.MkDir()
-	s.config_file = path.Join(s.dir, ".series/config.json")
+	s.configFile = path.Join(s.dir, ".series/config.json")
 }
 
 func (s *MySuite) TestConfigParsingWhenNoConfigExists(c *C) {
 	standard := Config{}
-	config := GetConfig(s.config_file, standard)
+	config := GetConfig(s.configFile, standard)
 
 	c.Assert(config, DeepEquals, standard)
-	c.Assert(util.PathExists(s.config_file), Equals, true)
+	c.Assert(util.PathExists(s.configFile), Equals, true)
 }
 
 func (s *MySuite) TestConfigParsingWithChanges(c *C) {
 	// create config which seems to be changed by the user
 	old := Config{IndexFile: "/not/existing/file.json"}
-	_ = GetConfig(s.config_file, old)
-	c.Assert(util.PathExists(s.config_file), Equals, true)
+	_ = GetConfig(s.configFile, old)
+	c.Assert(util.PathExists(s.configFile), Equals, true)
 
 	standard := Config{IndexFile: "/other/non/existing/file"}
-	config := GetConfig(s.config_file, standard)
+	config := GetConfig(s.configFile, standard)
 	c.Assert(config.IndexFile, Equals, "/not/existing/file.json")
 }

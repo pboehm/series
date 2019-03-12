@@ -15,27 +15,27 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 	episode := new(Episode)
 
 	if !util.PathExists(path) {
-		return episode, errors.New("Supplied episode does not exist")
+		return episode, errors.New("supplied episode does not exist")
 	}
 
 	basename := filepath.Base(path)
 	if !IsInterestingDirEntry(basename) {
-		return episode, errors.New("Supplied episode has no series information")
+		return episode, errors.New("supplied episode has no series information")
 	}
 
 	episode.Path = path
-	episode.Episodefile = path
+	episode.EpisodeFile = path
 	if util.IsDirectory(path) {
-		episodefile, err := FindBiggestVideoFile(path)
+		episodeFile, err := FindBiggestVideoFile(path)
 
 		if err != nil {
 			return episode, err
 		}
-		episode.Episodefile = episodefile
+		episode.EpisodeFile = episodeFile
 	}
 
-	if !HasVideoFileEnding(episode.Episodefile) {
-		return episode, errors.New("No videofile available")
+	if !HasVideoFileEnding(episode.EpisodeFile) {
+		return episode, errors.New("no video file available")
 	}
 
 	information := ExtractEpisodeInformation(basename)
@@ -43,7 +43,7 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 	episode.Episode, _ = strconv.Atoi(information["episode"])
 
 	episode.Series = CleanEpisodeInformation(information["series"])
-	episode.Extension = GlobalPath.Ext(episode.Episodefile)
+	episode.Extension = GlobalPath.Ext(episode.EpisodeFile)
 
 	name := information["episodename"]
 	if util.IsFile(path) {
@@ -58,57 +58,57 @@ func CreateEpisodeFromPath(path string) (*Episode, error) {
 
 type Episode struct {
 	Season, Episode                                      int
-	Name, Series, Extension, Episodefile, Path, Language string
+	Name, Series, Extension, EpisodeFile, Path, Language string
 }
 
-func (self *Episode) CleanedFileName() string {
+func (e *Episode) CleanedFileName() string {
 	return fmt.Sprintf("S%02dE%02d - %s%s",
-		self.Season, self.Episode, self.Name, self.Extension)
+		e.Season, e.Episode, e.Name, e.Extension)
 }
 
-func (self *Episode) HasValidEpisodeName() bool {
-	return self.Name != ""
+func (e *Episode) HasValidEpisodeName() bool {
+	return e.Name != ""
 }
 
-func (self *Episode) SetDefaultEpisodeName() {
-	self.Name = fmt.Sprintf("Episode %02d", self.Episode)
+func (e *Episode) SetDefaultEpisodeName() {
+	e.Name = fmt.Sprintf("Episode %02d", e.Episode)
 }
 
-func (self *Episode) CanBeRenamed() bool {
-	return self.HasValidEpisodeName() && util.IsFile(self.Episodefile)
+func (e *Episode) CanBeRenamed() bool {
+	return e.HasValidEpisodeName() && util.IsFile(e.EpisodeFile)
 }
 
-func (self *Episode) ExtractLanguage() {
+func (e *Episode) ExtractLanguage() {
 	pattern := regexp.MustCompile("(?i)German")
-	if pattern.Match([]byte(self.Name)) {
-		self.Language = "de"
+	if pattern.Match([]byte(e.Name)) {
+		e.Language = "de"
 	}
 }
 
-func (self *Episode) RemoveTrashwords() {
-	self.Name = ApplyTrashwordsOnString(self.Name)
+func (e *Episode) RemoveTrashWords() {
+	e.Name = ApplyTrashWordsOnString(e.Name)
 }
 
-func (self *Episode) Rename(dest_path string) error {
-	if !self.CanBeRenamed() {
+func (e *Episode) Rename(destPath string) error {
+	if !e.CanBeRenamed() {
 		return errors.New(
-			"This episode couldn't be renamed as it has some problems")
+			"this episode couldn't be renamed as it has some problems")
 	}
 
-	need_cleanup := false
-	if util.IsDirectory(self.Path) {
-		need_cleanup = true
+	needCleanup := false
+	if util.IsDirectory(e.Path) {
+		needCleanup = true
 	}
 
-	dest := GlobalPath.Join(dest_path, self.CleanedFileName())
+	dest := GlobalPath.Join(destPath, e.CleanedFileName())
 
-	err := os.Rename(self.Episodefile, dest)
+	err := os.Rename(e.EpisodeFile, dest)
 	if err != nil {
 		return err
 	}
 
-	if need_cleanup {
-		return os.RemoveAll(self.Path)
+	if needCleanup {
+		return os.RemoveAll(e.Path)
 	}
 
 	return nil

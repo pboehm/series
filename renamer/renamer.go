@@ -44,8 +44,8 @@ var (
 	}
 )
 
-func HasVideoFileEnding(entry_path string) bool {
-	extension := path.Ext(entry_path)
+func HasVideoFileEnding(entryPath string) bool {
+	extension := path.Ext(entryPath)
 
 	if extension == "" {
 		return false
@@ -66,20 +66,20 @@ func HasVideoFileEnding(entry_path string) bool {
 
 func FindBiggestVideoFile(dir string) (string, error) {
 	if !util.IsDirectory(dir) {
-		return "", errors.New("The supplied directory does not exist")
+		return "", errors.New("the supplied directory does not exist")
 	}
 
-	var videofile string
-	var videofile_size int64
+	var videoFile string
+	var videoFileSize int64
 
-	walker := func(entry_path string, info os.FileInfo, err error) error {
-		if info.IsDir() || !HasVideoFileEnding(entry_path) {
+	walker := func(entryPath string, info os.FileInfo, err error) error {
+		if info.IsDir() || !HasVideoFileEnding(entryPath) {
 			return nil
 		}
 
-		if info.Size() > videofile_size {
-			videofile = entry_path
-			videofile_size = info.Size()
+		if info.Size() > videoFileSize {
+			videoFile = entryPath
+			videoFileSize = info.Size()
 		}
 
 		return nil
@@ -90,17 +90,17 @@ func FindBiggestVideoFile(dir string) (string, error) {
 		panic(err)
 	}
 
-	if videofile == "" {
-		return "", errors.New("No videofile available")
+	if videoFile == "" {
+		return "", errors.New("no video file available")
 	}
 
-	return videofile, nil
+	return videoFile, nil
 }
 
-func ApplyTrashwordsOnString(str string) string {
-	purge_count := 0
-	last_purge := ""
-	valid_words := []string{}
+func ApplyTrashWordsOnString(str string) string {
+	purgeCount := 0
+	lastPurge := ""
+	var validWords []string
 	splitted := regexp.MustCompile("\\s").Split(str, -1)
 
 SplittedLoop:
@@ -108,31 +108,31 @@ SplittedLoop:
 		if word == "" {
 			continue SplittedLoop
 		}
-		if purge_count > 2 {
+		if purgeCount > 2 {
 			break
 		}
 
-		word_pattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", word))
+		wordPattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", word))
 
-		// Check if the current word is a known trashword
-		for _, trashword := range TrashWords {
-			if word_pattern.Match([]byte(trashword)) {
-				purge_count++
-				last_purge = word
+		// Check if the current word is a known trashWord
+		for _, trashWord := range TrashWords {
+			if wordPattern.Match([]byte(trashWord)) {
+				purgeCount++
+				lastPurge = word
 				continue SplittedLoop
 			}
 		}
 
 		// check if a valid word occurs after the first purged word
-		if purge_count == 1 && last_purge != "" {
-			valid_words = append(valid_words, last_purge)
-			purge_count = 0
-			last_purge = ""
+		if purgeCount == 1 && lastPurge != "" {
+			validWords = append(validWords, lastPurge)
+			purgeCount = 0
+			lastPurge = ""
 		}
 
-		valid_words = append(valid_words, word)
+		validWords = append(validWords, word)
 	}
-	return strings.Join(valid_words, " ")
+	return strings.Join(validWords, " ")
 }
 
 func IsInterestingDirEntry(entry string) bool {

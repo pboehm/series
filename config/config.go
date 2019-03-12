@@ -14,42 +14,42 @@ type Config struct {
 	ScriptExtractors                                              []string
 }
 
-func GetConfig(config_file string, standard Config) Config {
+func GetConfig(configFile string, standard Config) Config {
 
-	if !util.PathExists(config_file) {
-		config_dir := path.Dir(config_file)
+	if !util.PathExists(configFile) {
+		configDir := path.Dir(configFile)
 
-		dir_err := os.MkdirAll(config_dir, 0755)
-		if dir_err != nil {
-			panic(dir_err)
+		dirErr := os.MkdirAll(configDir, 0755)
+		if dirErr != nil {
+			panic(dirErr)
 		}
 
-		writeMarshaledDataToFile(config_file, standard)
+		writeMarshaledDataToFile(configFile, standard)
 	}
 
-	content, read_err := ioutil.ReadFile(config_file)
-	if read_err != nil {
-		panic(read_err)
+	content, readErr := ioutil.ReadFile(configFile)
+	if readErr != nil {
+		panic(readErr)
 	}
 
-	unmarshal_err := json.Unmarshal(content, &standard)
-	if unmarshal_err != nil {
-		panic(unmarshal_err)
+	unmarshalErr := json.Unmarshal(content, &standard)
+	if unmarshalErr != nil {
+		panic(unmarshalErr)
 	}
 
-	writeMarshaledDataToFile(config_file, standard)
+	writeMarshaledDataToFile(configFile, standard)
 
 	return standard
 }
 
 func writeMarshaledDataToFile(file string, config Config) {
-	marshaled, marshal_err := json.MarshalIndent(config, "", "  ")
-	if marshal_err != nil {
-		panic(marshal_err)
+	marshaled, marshalErr := json.MarshalIndent(config, "", "  ")
+	if marshalErr != nil {
+		panic(marshalErr)
 	}
 
-	write_err := ioutil.WriteFile(file, marshaled, 0644)
-	if write_err != nil {
-		panic(write_err)
+	writeErr := ioutil.WriteFile(file, marshaled, 0644)
+	if writeErr != nil {
+		panic(writeErr)
 	}
 }

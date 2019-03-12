@@ -107,7 +107,7 @@ func (s *MySuite) TestAddAlreadyExistingEpisodeToIndex(c *C) {
 		Name: "Testepisode", Extension: ".mkv", Language: "de"}
 
 	added, err := s.index.AddEpisode(&episode)
-	c.Assert(err, ErrorMatches, "Episode already exists in Index")
+	c.Assert(err, ErrorMatches, "episode already exists in index")
 	c.Assert(added, Equals, false)
 }
 
@@ -156,15 +156,15 @@ func (s *MySuite) TestAddEpisodeWithCrappyFileInfos(c *C) {
 	added, err := s.index.AddEpisode(&episode)
 	c.Assert(added, Equals, false)
 	c.Assert(err, NotNil)
-	c.Assert(err, ErrorMatches, "Series does not exist in index")
+	c.Assert(err, ErrorMatches, "series does not exist in index")
 }
 
 type mockExtractor struct {
 	names []string
 }
 
-func (self mockExtractor) Names(*renamer.Episode) ([]string, error) {
-	return self.names, nil
+func (m mockExtractor) Names(*renamer.Episode) ([]string, error) {
+	return m.names, nil
 }
 
 func (s *MySuite) TestSeriesNameExtractor(c *C) {

@@ -9,7 +9,7 @@ import (
 	"regexp"
 )
 
-var RenameEpisodes, AddToIndex bool
+var renameEpisodes, addToIndex bool
 
 var renameAndIndexCmd = &cobra.Command{
 	Use:   "rename_and_index",
@@ -18,14 +18,14 @@ var renameAndIndexCmd = &cobra.Command{
 }
 
 func renameAndIndexHandler(cmd *cobra.Command, args []string) {
-	dir := AppConfig.EpisodeDirectory
-	if CustomEpisodeDirectory != "" {
-		dir = CustomEpisodeDirectory
+	dir := appConfig.EpisodeDirectory
+	if customEpisodeDirectory != "" {
+		dir = customEpisodeDirectory
 	}
 	HandleError(os.Chdir(dir))
 
-	interesting_entries := GetInterestingDirEntries()
-	if len(interesting_entries) == 0 {
+	interestingEntries := GetInterestingDirEntries()
+	if len(interestingEntries) == 0 {
 		os.Exit(0)
 	}
 
@@ -33,14 +33,14 @@ func renameAndIndexHandler(cmd *cobra.Command, args []string) {
 	loadIndex()
 
 	fmt.Println("### Process all interesting files ...")
-	renameable_episodes := HandleInterestingEpisodes(interesting_entries)
+	renameableEpisodes := HandleInterestingEpisodes(interestingEntries)
 
-	if len(renameable_episodes) > 0 && RenameEpisodes {
+	if len(renameableEpisodes) > 0 && renameEpisodes {
 		writeIndex()
 
 		fmt.Println("### Renaming episodes ...")
 
-		for _, episode := range renameable_episodes {
+		for _, episode := range renameableEpisodes {
 			fmt.Printf("> %s: %s", episode.Series, episode.CleanedFileName())
 
 			HandleError(episode.Rename("."))
@@ -59,72 +59,72 @@ func GetInterestingDirEntries() []string {
 		panic(err)
 	}
 
-	valid_regex := regexp.MustCompile("^S\\d+E\\d+.-.\\w+.*\\.\\w+$")
+	validRegex := regexp.MustCompile("^S\\d+E\\d+.-.\\w+.*\\.\\w+$")
 
-	interesting := []string{}
+	var interesting []string
 	for _, entry := range content {
-		entry_path := entry.Name()
+		entryPath := entry.Name()
 
-		if !renamer.IsInterestingDirEntry(entry_path) {
+		if !renamer.IsInterestingDirEntry(entryPath) {
 			continue
 		}
-		if valid_regex.Match([]byte(entry_path)) {
+		if validRegex.Match([]byte(entryPath)) {
 			continue
 		}
 
-		interesting = append(interesting, entry_path)
+		interesting = append(interesting, entryPath)
 	}
 
 	return interesting
 }
 
 func HandleInterestingEpisodes(entries []string) []*renamer.Episode {
-	renameable_episodes := []*renamer.Episode{}
+	var renameableEpisodes []*renamer.Episode
 
-	for _, entry_path := range entries {
+	for _, entryPath := range entries {
 
-		episode, err := renamer.CreateEpisodeFromPath(entry_path)
+		episode, err := renamer.CreateEpisodeFromPath(entryPath)
 		if err != nil {
-			fmt.Printf("!!! '%s' - %s\n\n", entry_path, err)
+			fmt.Printf("!!! '%s' - %s\n\n", entryPath, err)
 			continue
 		}
 
-		episode.RemoveTrashwords()
+		episode.RemoveTrashWords()
 		if !episode.HasValidEpisodeName() {
 			episode.SetDefaultEpisodeName()
 		}
 
-		fmt.Printf("<<< %s\n", entry_path)
+		fmt.Printf("<<< %s\n", entryPath)
 		fmt.Printf(">>> %s\n", episode.CleanedFileName())
 
 		if !episode.CanBeRenamed() {
-			fmt.Printf("!!! '%s' is currently not renameable\n\n", entry_path)
+			fmt.Printf("!!! '%s' is currently not renameable\n\n", entryPath)
 			continue
 		}
 
-		if AddToIndex {
-			added, added_err := SeriesIndex.AddEpisode(episode)
+		if addToIndex {
+			added, addedErr := seriesIndex.AddEpisode(episode)
 			if !added {
-				fmt.Printf("!!! couldn't be added to the index: %s\n\n", added_err)
+				fmt.Printf("!!! couldn't be added to the index: %s\n\n", addedErr)
 				continue
 			}
-			fmt.Println("---> succesfully added to series index\n")
+			fmt.Printf("---> succesfully added to series index\n\n")
 		}
 
-		renameable_episodes = append(renameable_episodes, episode)
+		renameableEpisodes = append(renameableEpisodes, episode)
 	}
 
-	return renameable_episodes
+	return renameableEpisodes
 }
 
 func init() {
-	renameAndIndexCmd.Flags().BoolVarP(&RenameEpisodes, "rename", "r", true,
+	renameAndIndexCmd.Flags().BoolVarP(&renameEpisodes, "rename", "r", true,
 		"Do actually rename the episodes.")
-	renameAndIndexCmd.Flags().BoolVarP(&AddToIndex, "index", "i", true,
+	renameAndIndexCmd.Flags().BoolVarP(&addToIndex, "index", "i", true,
 		"Add the episodes to index.")
 
-	indexCmd.Flags().BoolVarP(&RenameEpisodes, "rename", "r", true,
+	indexCmd.Flags().BoolVarP(&renameEpisodes, "rename", "r", true,
 		"Do actually rename the episodes.")
-	indexCmd.Flags().BoolVarP(&AddToIndex, "index", "i", true,
+	indexCmd.Flags().BoolVarP(&addToIndex, "index", "i", true,
 		"Add the episodes to index.")
 }

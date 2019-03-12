@@ -15,30 +15,29 @@ type SeriesNameExtractor interface {
 
 type FilesystemExtractor struct{}
 
-func (self FilesystemExtractor) Names(epi *renamer.Episode) ([]string, error) {
-	possibilities := []string{epi.Series}
+func (f FilesystemExtractor) Names(episode *renamer.Episode) ([]string, error) {
+	possibilities := []string{episode.Series}
 
-	if util.IsDirectory(epi.Path) {
-		// Check all subdirectories and the episodefile itepi for a suitable
-		// series name
-		episodepath := epi.Path
+	if util.IsDirectory(episode.Path) {
+		// Check all subdirectories and the episode file for a suitable series name
+		episodePath := episode.Path
 
-		// get the diff between epi.Path and epi.Episodefile so that we can
+		// get the diff between episode.Path and episode.EpisodeFile so that we can
 		// add one path element a time and extract the series
-		subpath := epi.Episodefile[len(episodepath):]
+		subPath := episode.EpisodeFile[len(episodePath):]
 
-		splits := strings.Split(subpath, "/")
+		splits := strings.Split(subPath, "/")
 
 		for _, part := range splits {
 			if part == "" {
 				continue
 			}
 
-			episodepath = path.Join(episodepath, part)
+			episodePath = path.Join(episodePath, part)
 
-			subepisode, suberr := renamer.CreateEpisodeFromPath(episodepath)
-			if suberr == nil {
-				possibilities = append(possibilities, subepisode.Series)
+			subEpisode, subErr := renamer.CreateEpisodeFromPath(episodePath)
+			if subErr == nil {
+				possibilities = append(possibilities, subEpisode.Series)
 			}
 		}
 	}
@@ -50,9 +49,9 @@ type ScriptExtractor struct {
 	ScriptPath string
 }
 
-func (self ScriptExtractor) Names(epi *renamer.Episode) ([]string, error) {
+func (s ScriptExtractor) Names(episode *renamer.Episode) ([]string, error) {
 	script := fmt.Sprintf("%s \"%s\" %d_%d",
-		self.ScriptPath, epi.Episodefile, epi.Season, epi.Episode)
+		s.ScriptPath, episode.EpisodeFile, episode.Season, episode.Episode)
 	cmd := exec.Command("/bin/sh", "-c", script)
 
 	output, err := cmd.Output()

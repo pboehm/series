@@ -7,27 +7,27 @@ import (
 	"os"
 )
 
-var SeriesIndex *index.SeriesIndex
-var NewSeriesLanguage string
+var seriesIndex *index.SeriesIndex
+var newSeriesLanguage string
 
 func loadIndex() {
 	fmt.Println("### Parsing series index ...")
 
 	var err error
-	SeriesIndex, err = index.ParseSeriesIndex(AppConfig.IndexFile)
+	seriesIndex, err = index.ParseSeriesIndex(appConfig.IndexFile)
 	HandleError(err)
 
 	// add each SeriesNameExtractor
-	SeriesIndex.AddExtractor(index.FilesystemExtractor{})
+	seriesIndex.AddExtractor(index.FilesystemExtractor{})
 
-	for _, script := range AppConfig.ScriptExtractors {
-		SeriesIndex.AddExtractor(index.ScriptExtractor{ScriptPath: script})
+	for _, script := range appConfig.ScriptExtractors {
+		seriesIndex.AddExtractor(index.ScriptExtractor{ScriptPath: script})
 	}
 }
 
 func writeIndex() {
 	fmt.Println("### Writing new index version ...")
-	SeriesIndex.WriteToFile(AppConfig.IndexFile)
+	seriesIndex.WriteToFile(appConfig.IndexFile)
 }
 
 var indexCmd = &cobra.Command{
@@ -47,9 +47,9 @@ var addIndexCmd = &cobra.Command{
 
 		for _, seriesname := range args {
 			fmt.Printf("Creating new index entry for '%s' [%s]\n",
-				seriesname, NewSeriesLanguage)
+				seriesname, newSeriesLanguage)
 
-			_, err := SeriesIndex.AddSeries(seriesname, NewSeriesLanguage)
+			_, err := seriesIndex.AddSeries(seriesname, newSeriesLanguage)
 			if err != nil {
 				fmt.Printf(
 					"!!! Adding new index entry wasn't possible: %s\n", err)
@@ -71,7 +71,7 @@ var removeIndexCmd = &cobra.Command{
 		for _, seriesname := range args {
 			fmt.Printf("Removing '%s' from index\n", seriesname)
 
-			_, err := SeriesIndex.RemoveSeries(seriesname)
+			_, err := seriesIndex.RemoveSeries(seriesname)
 			if err != nil {
 				fmt.Printf(
 					"!!! Removing series from index wasn't possible: %s\n", err)
@@ -100,7 +100,7 @@ var aliasIndexCmd = &cobra.Command{
 
 		for _, alias := range args {
 			fmt.Printf("Aliasing '%s' to '%s'\n", series, alias)
-			err := SeriesIndex.AliasSeries(series, alias)
+			err := seriesIndex.AliasSeries(series, alias)
 			if err != nil {
 				fmt.Printf("!!! Unable to alias the series: %s\n", err)
 			}
@@ -118,13 +118,13 @@ var listIndexCmd = &cobra.Command{
 		callPreProcessingHook()
 		loadIndex()
 
-		for _, series := range SeriesIndex.SeriesList {
+		for _, series := range seriesIndex.SeriesList {
 			fmt.Printf("%s\n", series.Name)
 		}
 	},
 }
 
 func init() {
-	addIndexCmd.Flags().StringVarP(&NewSeriesLanguage, "lang", "l", "de",
+	addIndexCmd.Flags().StringVarP(&newSeriesLanguage, "lang", "l", "de",
 		"language the series is watched in. (de/en/fr)")
 }
