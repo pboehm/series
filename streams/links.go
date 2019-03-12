@@ -67,6 +67,11 @@ func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Epi
 		})
 	}
 
+	// TODO replace by real hoster selection
+	sort.Slice(entryLinks[:], func(i, j int) bool {
+		return strings.Index(entryLinks[i].Hoster, "HD") > strings.Index(entryLinks[j].Hoster, "HD")
+	})
+
 	id, _ := NewIdentifier(series.SeriesNameInIndex, language, episode.Season, episode.Episode).AsString()
 
 	episodeName := ""
@@ -104,11 +109,6 @@ func (l *LinkSet) GroupedEntries() map[string][]*LinkSetEntry {
 		if !ok {
 			entriesByGroupId = []*LinkSetEntry{}
 		}
-
-		// TODO replace by real hoster selection
-		sort.Slice(entry.Links[:], func(i, j int) bool {
-			return strings.Index(entry.Links[i].Hoster, "HD") > strings.Index(entry.Links[j].Hoster, "HD")
-		})
 
 		grouped[groupId] = append(entriesByGroupId, entry)
 	}

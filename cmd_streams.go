@@ -1,11 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
 )
+
+var streamsCmdJsonOutput = false
 
 var streamsCmd = &cobra.Command{
 	Use:   "streams",
@@ -43,18 +46,25 @@ var streamsFetchLinksCmd = &cobra.Command{
 		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
 			linkSet := str.NewLinkSet(appConfig, streams, index)
 			linkSet.GrabLinksFor(watched)
-			grouped := linkSet.GroupedEntries()
 
-			for group, groupedEntries := range grouped {
-				fmt.Printf(">>>> %s\n", group)
-				for _, entry := range groupedEntries {
-					fmt.Printf(">> %s [%s]\n", entry.Filename, entry.Id)
+			if streamsCmdJsonOutput {
+				entries := linkSet.Entries()
+				bytes, err := json.MarshalIndent(entries, "", "  ")
+				HandleError(err)
+				fmt.Println(string(bytes))
+			} else {
+				grouped := linkSet.GroupedEntries()
+				for group, groupedEntries := range grouped {
+					fmt.Printf(">>>> %s\n", group)
+					for _, entry := range groupedEntries {
+						fmt.Printf(">> %s [%s]\n", entry.Filename, entry.Id)
 
-					for i, link := range entry.Links {
-						if i >= 2 {
-							break
+						for i, link := range entry.Links {
+							if i >= 2 {
+								break
+							}
+							fmt.Printf("  %s\t  [%s]\n", link.Link, link.Hoster)
 						}
-						fmt.Printf("  %s\t  [%s]\n", link.Link, link.Hoster)
 					}
 				}
 			}
@@ -103,5 +113,7 @@ func mapLanguagesToIds(languages []string) map[string]int {
 }
 
 func init() {
+	streamsFetchLinksCmd.Flags().BoolVarP(&streamsCmdJsonOutput, "json", "j", false, "output as JSON")
+
 	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd)
 }
