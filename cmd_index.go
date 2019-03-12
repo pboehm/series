@@ -127,4 +127,6 @@ var listIndexCmd = &cobra.Command{
 func init() {
 	addIndexCmd.Flags().StringVarP(&newSeriesLanguage, "lang", "l", "de",
 		"language the series is watched in. (de/en/fr)")
+
+	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, aliasIndexCmd, listIndexCmd)
 }

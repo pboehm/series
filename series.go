@@ -43,7 +43,6 @@ func init() {
 func main() {
 	setupConfig()
 
-	seriesCmd.AddCommand(renameAndIndexCmd, indexCmd)
-	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, aliasIndexCmd, listIndexCmd)
+	seriesCmd.AddCommand(renameAndIndexCmd, indexCmd, streamsCmd)
 	seriesCmd.Execute()
 }

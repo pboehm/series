@@ -12,6 +12,7 @@ type Config struct {
 	IndexFile, PreProcessingHook, PostProcessingHook, EpisodeHook string
 	EpisodeDirectory                                              string
 	ScriptExtractors                                              []string
+	StreamsAPIToken                                               string
 }
 
 func GetConfig(configFile string, standard Config) Config {

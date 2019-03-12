@@ -213,7 +213,7 @@ func (s *SeriesIndex) SeriesNameInIndex(seriesName string) string {
 			break
 		}
 
-		pattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", joined))
+		pattern := regexp.MustCompile(fmt.Sprintf("^(?i)%s$", regexp.QuoteMeta(joined)))
 		for name, series := range s.seriesMap {
 			if pattern.Match([]byte(name)) {
 				return series.Name
@@ -228,8 +228,12 @@ func (s *SeriesIndex) SeriesNameInIndex(seriesName string) string {
 }
 
 func (s *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
+	return s.IsEpisodeInIndexManual(episode.Series, episode.Language, episode.Season, episode.Episode)
+}
 
-	seriesName := s.SeriesNameInIndex(episode.Series)
+func (s *SeriesIndex) IsEpisodeInIndexManual(inputSeriesName string, language string, season int, episode int) bool {
+
+	seriesName := s.SeriesNameInIndex(inputSeriesName)
 	if seriesName == "" {
 		return false
 	}
@@ -239,12 +243,12 @@ func (s *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 		return false
 	}
 
-	set, languageExist := series.languageMap[episode.Language]
+	set, languageExist := series.languageMap[language]
 	if !languageExist {
 		return false
 	}
 
-	key := buildIndexKey(episode.Season, episode.Episode)
+	key := buildIndexKey(season, episode)
 	_, episodeExist := set.episodeMap[key]
 
 	if episodeExist {
@@ -255,7 +259,7 @@ func (s *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 	// takes place
 	if set.allBefore {
 		barrier := set.allBeforeSeason*100 + set.allBeforeEpisode
-		actual := episode.Season*100 + episode.Episode
+		actual := season*100 + episode
 
 		if actual < barrier {
 			return true
@@ -263,6 +267,19 @@ func (s *SeriesIndex) IsEpisodeInIndex(episode renamer.Episode) bool {
 	}
 
 	return false
+}
+
+func (s *SeriesIndex) SeriesLanguages(seriesNameInIndex string) []string {
+	var languages []string
+
+	series, ok := s.seriesMap[seriesNameInIndex]
+	if ok {
+		for key, _ := range series.languageMap {
+			languages = append(languages, key)
+		}
+	}
+
+	return languages
 }
 
 func ParseSeriesIndex(xmlPath string) (*SeriesIndex, error) {
