@@ -13,7 +13,7 @@ var LOG = log.New(os.Stderr, "", 0)
 
 func HandleError(err error) {
 	if err != nil {
-		LOG.Fatal(err)
+		LOG.Fatalf("Error during execution: %s", err)
 	}
 }
 

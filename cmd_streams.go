@@ -73,6 +73,31 @@ var streamsFetchLinksCmd = &cobra.Command{
 	},
 }
 
+var streamsMarkWatchedCmd = &cobra.Command{
+	Use:   "mark-watched [id, ....]",
+	Short: "mark links as watched",
+	Run: func(cmd *cobra.Command, args []string) {
+		callPreProcessingHook()
+		loadIndex()
+
+		for _, arg := range args {
+			id, e := str.IdentifierFromString(arg)
+			HandleError(e)
+
+			filename := fmt.Sprintf("S%02dE%02d - Episode %d.mov", id.Season, id.Episode, id.Episode)
+			_, err := seriesIndex.AddEpisodeManually(id.Series, id.Language, id.Season, id.Episode, filename)
+			if err == nil {
+				LOG.Printf("Marking %s of %s [%s] as watched\n", filename, id.Series, id.Language)
+			} else {
+				LOG.Printf("Could not mark %s of %s [%s] as watched: %s\n", filename, id.Series, id.Language, err)
+			}
+		}
+
+		writeIndex()
+		callPostProcessingHook()
+	},
+}
+
 var streamsServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "run an HTTP server serving an API and a frontend for streams",
@@ -144,5 +169,5 @@ func mapLanguagesToIds(languages []string) map[string]int {
 func init() {
 	streamsFetchLinksCmd.Flags().BoolVarP(&streamsCmdJsonOutput, "json", "j", false, "output as JSON")
 
-	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsServerCmd)
+	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsMarkWatchedCmd, streamsServerCmd)
 }

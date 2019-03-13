@@ -59,19 +59,28 @@ ExtractorLoop:
 		s.GuessEpisodeLanguage(episode, series)
 	}
 
-	_, languageExist := series.languageMap[episode.Language]
+	return s.AddEpisodeManually(episode.Series, episode.Language, episode.Season, episode.Episode, episode.CleanedFileName())
+}
+
+func (s *SeriesIndex) AddEpisodeManually(seriesNameInIndex string, language string, season int, episode int, filename string) (bool, error) {
+	series, existing := s.seriesMap[seriesNameInIndex]
+	if !existing {
+		return false, errors.New("series does not exist in index")
+	}
+
+	_, languageExist := series.languageMap[language]
 	if !languageExist {
 		return false, errors.New("series is not watched in this language")
 	}
 
-	if s.IsEpisodeInIndex(*episode) {
+	if s.IsEpisodeInIndexManual(series.Name, language, season, episode) {
 		return false, errors.New("episode already exists in index")
 	}
 
-	episodeEntry := Episode{Name: episode.CleanedFileName()}
+	episodeEntry := Episode{Name: filename}
 
 	// find the right EpisodeSet so we can add our new episode to it
-	set, exist := series.languageMap[episode.Language]
+	set, exist := series.languageMap[language]
 	if exist {
 		set.EpisodeList = append(set.EpisodeList, episodeEntry)
 		set.BuildUpEpisodeMap()
