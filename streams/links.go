@@ -19,6 +19,7 @@ type LinkSetEntry struct {
 	Language    string              `json:"language"`
 	Season      int                 `json:"season"`
 	Episode     int                 `json:"episode"`
+	EpisodeId   int                 `json:"episode_id"`
 	EpisodeName string              `json:"episode_name"`
 	Filename    string              `json:"filename"`
 	Links       []*LinkSetEntryLink `json:"links"`
@@ -57,6 +58,10 @@ func (l *LinkSet) GrabLinksFor(watched []WatchedSeries) {
 			}
 		}
 	}
+
+	sort.Slice(l.episodeLinks, func(i, j int) bool {
+		return l.episodeLinks[i].EpisodeId < l.episodeLinks[j].EpisodeId
+	})
 }
 
 func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Episode, links []*Link) {
@@ -90,6 +95,7 @@ func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Epi
 		Language:    language,
 		Season:      episode.Season,
 		Episode:     episode.Episode,
+		EpisodeId:   episode.ID,
 		EpisodeName: episodeName,
 		Filename:    fmt.Sprintf("S%02dE%02d - %s.mov", episode.Season, episode.Episode, episodeName),
 		Links:       entryLinks,

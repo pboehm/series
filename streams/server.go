@@ -2,7 +2,13 @@ package streams
 
 import (
 	"github.com/gin-gonic/gin"
+	"sort"
 )
+
+type GroupedSeriesResponse struct {
+	Series   string          `json:"series"`
+	Episodes []*LinkSetEntry `json:"episodes"`
+}
 
 type API struct {
 	HtmlContent    func() []byte
@@ -18,7 +24,8 @@ func (a *API) Run(listen string) error {
 	})
 	r.GET("/api/links", func(c *gin.Context) {
 		entriesReady := false
-		var entries []*LinkSetEntry
+		//noinspection GoPreferNilSlice
+		entries := []*LinkSetEntry{}
 
 		linkSet := a.LinkSet()
 		if linkSet != nil {
@@ -41,9 +48,25 @@ func (a *API) Run(listen string) error {
 			entries = linkSet.GroupedEntries()
 		}
 
+		//noinspection GoPreferNilSlice
+		grouped := []GroupedSeriesResponse{}
+		for seriesName, entries := range entries {
+			grouped = append(grouped, GroupedSeriesResponse{
+				Series:   seriesName,
+				Episodes: entries,
+			})
+		}
+
+		// sort grouped series so that series with newer episodes appear first
+		sort.Slice(grouped, func(i, j int) bool {
+			iEpisodes := grouped[i].Episodes
+			jEpisodes := grouped[j].Episodes
+			return iEpisodes[len(iEpisodes)-1].EpisodeId > jEpisodes[len(jEpisodes)-1].EpisodeId
+		})
+
 		c.JSON(200, gin.H{
 			"ready": entriesReady,
-			"links": entries,
+			"links": grouped,
 		})
 	})
 	r.POST("/api/links/refresh", func(c *gin.Context) {

@@ -83,6 +83,7 @@ var ServerStaticHtml = `
 </div>
 
 <div class="container" id="series-container">
+
 </div>
 
 <script src="http://code.jquery.com/jquery-3.3.1.min.js"></script>
@@ -114,6 +115,8 @@ var ServerStaticHtml = `
         [[/episodes]]
     </ul>
     [[/groups]]
+
+
 </script>
 
 <script>
@@ -186,22 +189,16 @@ var ServerStaticHtml = `
                 refreshButton.addClass("hidden");
             }
 
-            var links = success.links;
-            var groups = [];
+            var groups = success.links;
 
-            Object.keys(links).forEach(function (groupName) {
-                var episodes = links[groupName];
+            groups.forEach(function (group) {
+                var episodes = group["episodes"];
                 episodes.forEach(function (episode) {
                     episode["watched"] = hasEpisodeBeenWatched(episode["id"]);
 
                     episode["links"].forEach(function (link) {
                         link["episodeId"] = episode["id"];
                     });
-                });
-
-                groups.push({
-                    series: groupName,
-                    episodes: episodes
                 });
             });
 
