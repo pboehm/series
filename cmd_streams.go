@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
@@ -74,6 +73,19 @@ var streamsFetchLinksCmd = &cobra.Command{
 	},
 }
 
+func markEpisodeAsWatched(index *idx.SeriesIndex, episodeId string) (*str.Identifier, error) {
+	var err error
+
+	id, err := str.IdentifierFromString(episodeId)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := fmt.Sprintf("S%02dE%02d - Episode %d.mov", id.Season, id.Episode, id.Episode)
+	_, err = index.AddEpisodeManually(id.Series, id.Language, id.Season, id.Episode, filename)
+	return id, err
+}
+
 var streamsMarkWatchedCmd = &cobra.Command{
 	Use:   "mark-watched [id, ....]",
 	Short: "mark links as watched",
@@ -82,15 +94,16 @@ var streamsMarkWatchedCmd = &cobra.Command{
 		loadIndex()
 
 		for _, arg := range args {
-			id, e := str.IdentifierFromString(arg)
-			HandleError(e)
+			id, err := markEpisodeAsWatched(seriesIndex, arg)
+			if id == nil && err != nil {
+				HandleError(err)
+			}
 
-			filename := fmt.Sprintf("S%02dE%02d - Episode %d.mov", id.Season, id.Episode, id.Episode)
-			_, err := seriesIndex.AddEpisodeManually(id.Series, id.Language, id.Season, id.Episode, filename)
+			seasonWithEpisode := fmt.Sprintf("S%02dE%02d", id.Season, id.Episode)
 			if err == nil {
-				LOG.Printf("Marking %s of %s [%s] as watched\n", filename, id.Series, id.Language)
+				LOG.Printf("Marking %s of %s [%s] as watched\n", seasonWithEpisode, id.Series, id.Language)
 			} else {
-				LOG.Printf("Could not mark %s of %s [%s] as watched: %s\n", filename, id.Series, id.Language, err)
+				LOG.Printf("Could not mark %s of %s [%s] as watched: %s\n", seasonWithEpisode, id.Series, id.Language, err)
 			}
 		}
 
@@ -119,26 +132,48 @@ var streamsServerCmd = &cobra.Command{
 			}
 		}
 
-		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
-			linkSet := str.NewLinkSet(appConfig, streams, index)
-			linkSet.GrabLinksFor(watched)
+		var currentLinkSet *str.LinkSet
 
-			r := gin.Default()
-			r.GET("/", func(c *gin.Context) {
-				c.Data(200, "text/html; charset=utf-8", indexHtmlContent())
+		loadLinkSet := func() {
+			withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
+				linkSet := str.NewLinkSet(appConfig, streams, index)
+				linkSet.GrabLinksFor(watched)
+				currentLinkSet = linkSet
 			})
-			r.GET("/api/links", func(c *gin.Context) {
-				c.JSON(200, gin.H{
-					"links": linkSet.Entries(),
-				})
-			})
-			r.GET("/api/links/grouped", func(c *gin.Context) {
-				c.JSON(200, gin.H{
-					"links": linkSet.GroupedEntries(),
-				})
-			})
-			HandleError(r.Run(streamsServerOptionListen))
-		})
+		}
+
+		go loadLinkSet()
+
+		api := str.API{
+			HtmlContent:    indexHtmlContent,
+			LinkSetRefresh: loadLinkSet,
+			LinkSet: func() *str.LinkSet {
+				return currentLinkSet
+			},
+			MarkWatched: func(episodeIds []string) ([]string, []string) {
+				var successes, failures []string
+
+				callPreProcessingHook()
+				loadIndex()
+
+				for _, episodeId := range episodeIds {
+					_, err := markEpisodeAsWatched(seriesIndex, episodeId)
+					if err == nil {
+						successes = append(successes, episodeId)
+					} else {
+						failures = append(failures, episodeId)
+					}
+				}
+
+				writeIndex()
+				callPostProcessingHook()
+
+				loadLinkSet()
+
+				return successes, failures
+			},
+		}
+		HandleError(api.Run(streamsServerOptionListen))
 	},
 }
 
