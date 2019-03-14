@@ -1,8 +1,6 @@
 package streams
 
-import "html/template"
-
-var ServerStaticHtmlTemplate = template.Must(template.New("index").Parse(`
+var ServerStaticHtml = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -78,4 +76,4 @@ var ServerStaticHtmlTemplate = template.Must(template.New("index").Parse(`
   </script>
 </body>
 </html>
-`))
+`

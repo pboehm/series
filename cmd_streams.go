@@ -7,6 +7,7 @@ import (
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
+	"io/ioutil"
 )
 
 var streamsCmdJsonOutput = false
@@ -98,18 +99,33 @@ var streamsMarkWatchedCmd = &cobra.Command{
 	},
 }
 
+var streamsServerOptionListen string
+var streamsServerOptionIndexHtml string
+
 var streamsServerCmd = &cobra.Command{
 	Use:   "server",
 	Short: "run an HTTP server serving an API and a frontend for streams",
 	Run: func(cmd *cobra.Command, args []string) {
+		indexHtmlContent := func() []byte {
+			if streamsServerOptionIndexHtml != "" {
+				indexFileBytes, err := ioutil.ReadFile(streamsServerOptionIndexHtml)
+				if err != nil {
+					HandleError(err)
+				}
+
+				return indexFileBytes
+			} else {
+				return []byte(str.ServerStaticHtml)
+			}
+		}
+
 		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
 			linkSet := str.NewLinkSet(appConfig, streams, index)
 			linkSet.GrabLinksFor(watched)
 
 			r := gin.Default()
-			r.SetHTMLTemplate(str.ServerStaticHtmlTemplate)
 			r.GET("/", func(c *gin.Context) {
-				c.HTML(200, "index", gin.H{})
+				c.Data(200, "text/html; charset=utf-8", indexHtmlContent())
 			})
 			r.GET("/api/links", func(c *gin.Context) {
 				c.JSON(200, gin.H{
@@ -121,7 +137,7 @@ var streamsServerCmd = &cobra.Command{
 					"links": linkSet.GroupedEntries(),
 				})
 			})
-			HandleError(r.Run())
+			HandleError(r.Run(streamsServerOptionListen))
 		})
 	},
 }
@@ -168,6 +184,9 @@ func mapLanguagesToIds(languages []string) map[string]int {
 
 func init() {
 	streamsFetchLinksCmd.Flags().BoolVarP(&streamsCmdJsonOutput, "json", "j", false, "output as JSON")
+
+	streamsServerCmd.Flags().StringVarP(&streamsServerOptionListen, "listen", "l", ":8080", "where should the server listen")
+	streamsServerCmd.Flags().StringVarP(&streamsServerOptionIndexHtml, "index", "i", "", "a custom index.html that should be used")
 
 	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsMarkWatchedCmd, streamsServerCmd)
 }
