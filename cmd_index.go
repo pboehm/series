@@ -46,12 +46,12 @@ var addIndexCmd = &cobra.Command{
 		loadIndex()
 
 		for _, seriesName := range args {
-			fmt.Printf("Creating new index entry for '%s' [%s]\n",
+			LOG.Printf("Creating new index entry for '%s' [%s]\n",
 				seriesName, newSeriesLanguage)
 
 			_, err := seriesIndex.AddSeries(seriesName, newSeriesLanguage)
 			if err != nil {
-				fmt.Printf(
+				LOG.Printf(
 					"!!! Adding new index entry wasn't possible: %s\n", err)
 			}
 		}
@@ -118,7 +118,7 @@ var listIndexCmd = &cobra.Command{
 		loadIndex()
 
 		for _, series := range seriesIndex.SeriesList {
-			fmt.Printf("%s\n", series.Name)
+			fmt.Println(series.Name)
 		}
 	},
 }
