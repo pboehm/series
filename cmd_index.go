@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/pboehm/series/index"
+	"github.com/pboehm/series/util"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -11,10 +13,15 @@ var seriesIndex *index.SeriesIndex
 var newSeriesLanguage string
 
 func loadIndex() {
+	indexFilePath := appConfig.IndexFile
+	if !util.PathExists(indexFilePath) {
+		HandleError(errors.New(fmt.Sprintf("series index file %s does not exist, create one via `series index init`", indexFilePath)))
+	}
+
 	LOG.Println("### Parsing series index ...")
 
 	var err error
-	seriesIndex, err = index.ParseSeriesIndex(appConfig.IndexFile)
+	seriesIndex, err = index.ParseSeriesIndex(indexFilePath)
 	HandleError(err)
 
 	// add each SeriesNameExtractor
@@ -38,7 +45,23 @@ var indexCmd = &cobra.Command{
 	},
 }
 
-var addIndexCmd = &cobra.Command{
+var indexInitCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize an empty series index",
+	Run: func(cmd *cobra.Command, args []string) {
+		indexFilePath := appConfig.IndexFile
+		if util.PathExists(indexFilePath) {
+			HandleError(errors.New("series index already initialized"))
+		}
+
+		seriesIndex = &index.SeriesIndex{}
+
+		writeIndex()
+		callPostProcessingHook()
+	},
+}
+
+var indexAddCmd = &cobra.Command{
 	Use:   "add [series, ...]",
 	Short: "Add series to index",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -61,7 +84,7 @@ var addIndexCmd = &cobra.Command{
 	},
 }
 
-var removeIndexCmd = &cobra.Command{
+var indexRemoveCmd = &cobra.Command{
 	Use:   "remove [series, ...]",
 	Short: "Remove series from index",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -82,7 +105,7 @@ var removeIndexCmd = &cobra.Command{
 	},
 }
 
-var aliasIndexCmd = &cobra.Command{
+var indexAliasCmd = &cobra.Command{
 	Use:   "alias series [alias, ...]",
 	Short: "Aliases the given series to the supplied aliases",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -110,7 +133,7 @@ var aliasIndexCmd = &cobra.Command{
 	},
 }
 
-var listIndexCmd = &cobra.Command{
+var indexListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all series in index",
 	Run: func(cmd *cobra.Command, args []string) {
@@ -124,8 +147,8 @@ var listIndexCmd = &cobra.Command{
 }
 
 func init() {
-	addIndexCmd.Flags().StringVarP(&newSeriesLanguage, "lang", "l", "de",
+	indexAddCmd.Flags().StringVarP(&newSeriesLanguage, "lang", "l", "de",
 		"language the series is watched in. (de/en/fr)")
 
-	indexCmd.AddCommand(addIndexCmd, removeIndexCmd, aliasIndexCmd, listIndexCmd)
+	indexCmd.AddCommand(indexInitCmd, indexAddCmd, indexRemoveCmd, indexAliasCmd, indexListCmd)
 }
