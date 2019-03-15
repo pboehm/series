@@ -9,6 +9,8 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"strings"
+	"text/tabwriter"
 )
 
 var seriesIndex *index.SeriesIndex
@@ -155,9 +157,21 @@ var indexListCmd = &cobra.Command{
 		callPreProcessingHook()
 		loadIndex()
 
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 8, ' ', 0)
 		for _, series := range seriesIndex.SeriesList {
-			fmt.Println(series.Name)
+			var aliases []string
+			for _, alias := range series.Aliases {
+				aliases = append(aliases, alias.To)
+			}
+
+			joined := ""
+			if len(aliases) > 0 {
+				joined = fmt.Sprintf("aliases: %s", strings.Join(aliases, "; "))
+			}
+
+			fmt.Fprintf(w, "%s\t%s\n", series.Name, joined)
 		}
+		w.Flush()
 	},
 }
 
