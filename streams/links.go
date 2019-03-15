@@ -41,9 +41,31 @@ func NewLinkSet(config config.Config, streams *Streams, index *index.SeriesIndex
 }
 
 func (l *LinkSet) GrabLinksFor(watched []WatchedSeries) {
+	resultsChannel := make(chan []*LinkSetEntry, len(watched))
+
 	for _, series := range watched {
-		seasons := l.streams.Seasons(series.Series)
-		episodes := l.streams.Episodes(series.Series, seasons[0])
+		go l.grabLinksForSeries(series, resultsChannel)
+	}
+
+	for range watched {
+		results := <-resultsChannel
+		l.episodeLinks = append(l.episodeLinks, results...)
+	}
+
+	sort.Slice(l.episodeLinks, func(i, j int) bool {
+		return l.episodeLinks[i].EpisodeId < l.episodeLinks[j].EpisodeId
+	})
+}
+
+func (l *LinkSet) grabLinksForSeries(series WatchedSeries, results chan []*LinkSetEntry) {
+	var entries []*LinkSetEntry
+
+	seasons := l.streams.Seasons(series.Series)
+
+	for _, season := range seasons {
+		var existingEpisodes, newEpisodes = 0, 0
+
+		episodes := l.streams.Episodes(series.Series, season)
 
 		for _, episode := range episodes {
 			for language, languageInt := range series.SeriesLanguages {
@@ -53,18 +75,24 @@ func (l *LinkSet) GrabLinksFor(watched []WatchedSeries) {
 				}
 
 				if !l.index.IsEpisodeInIndexManual(series.SeriesNameInIndex, language, episode.Season, episode.Episode) {
-					l.addEpisode(series, language, episode, links)
+					entries = append(entries, l.buildEntry(series, language, episode, links))
+					newEpisodes += 1
+				} else {
+					existingEpisodes += 1
 				}
 			}
 		}
+
+		// we stop iterating if we have a season where all episodes are already watched
+		if existingEpisodes > 0 && newEpisodes == 0 {
+			break
+		}
 	}
 
-	sort.Slice(l.episodeLinks, func(i, j int) bool {
-		return l.episodeLinks[i].EpisodeId < l.episodeLinks[j].EpisodeId
-	})
+	results <- entries
 }
 
-func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Episode, links []*Link) {
+func (l *LinkSet) buildEntry(series WatchedSeries, language string, episode *Episode, links []*Link) *LinkSetEntry {
 	var entryLinks []*LinkSetEntryLink
 	for _, link := range links {
 		entryLinks = append(entryLinks, &LinkSetEntryLink{
@@ -89,7 +117,7 @@ func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Epi
 	default:
 	}
 
-	episodeLink := &LinkSetEntry{
+	return &LinkSetEntry{
 		Id:          id,
 		Series:      series.SeriesNameInIndex,
 		Language:    language,
@@ -100,8 +128,6 @@ func (l *LinkSet) addEpisode(series WatchedSeries, language string, episode *Epi
 		Filename:    fmt.Sprintf("S%02dE%02d - %s.mov", episode.Season, episode.Episode, episodeName),
 		Links:       entryLinks,
 	}
-
-	l.episodeLinks = append(l.episodeLinks, episodeLink)
 }
 
 func (l *LinkSet) Entries() []*LinkSetEntry {
