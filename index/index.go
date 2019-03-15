@@ -91,7 +91,7 @@ func (s *SeriesIndex) AddEpisodeManually(seriesNameInIndex string, language stri
 		errors.New("episode couldn't be added to index, this shouldn't occur")
 }
 
-func (s *SeriesIndex) AddSeries(seriesname, language string) (bool, error) {
+func (s *SeriesIndex) AddSeries(seriesname, language string, season int, episode int) (bool, error) {
 
 	_, existing := s.seriesMap[seriesname]
 	if existing {
@@ -104,7 +104,10 @@ func (s *SeriesIndex) AddSeries(seriesname, language string) (bool, error) {
 			{
 				Language: language,
 				EpisodeList: []Episode{
-					{Name: "S01E00 - Pre-Pilot.mkv"},
+					{
+						Name:      fmt.Sprintf("S%02dE%02d - Pre-First.mov", season, episode),
+						AllBefore: true,
+					},
 				},
 			},
 		},

@@ -7,10 +7,13 @@ import (
 	"github.com/pboehm/series/util"
 	"github.com/spf13/cobra"
 	"os"
+	"regexp"
+	"strconv"
 )
 
 var seriesIndex *index.SeriesIndex
 var newSeriesLanguage string
+var newSeriesFirstEpisode string
 
 func loadIndex() {
 	indexFilePath := appConfig.IndexFile
@@ -65,14 +68,26 @@ var indexAddCmd = &cobra.Command{
 	Use:   "add [series, ...]",
 	Short: "Add series to index",
 	Run: func(cmd *cobra.Command, args []string) {
+		pattern := regexp.MustCompile("^S(?P<season>\\d+)E(?P<episode>\\d+)$")
+		groups, matched := util.NamedCaptureGroups(pattern, newSeriesFirstEpisode)
+		if !matched {
+			HandleError(errors.New("first episode does not have the correct format like: S01E01"))
+		}
+
+		season, seasonErr := strconv.Atoi(groups["season"])
+		episode, episodeErr := strconv.Atoi(groups["episode"])
+		if seasonErr != nil || episodeErr != nil || season <= 0 || episode <= 0 {
+			HandleError(errors.New("first episode is invalid"))
+		}
+
 		callPreProcessingHook()
 		loadIndex()
 
 		for _, seriesName := range args {
-			LOG.Printf("Creating new index entry for '%s' [%s]\n",
-				seriesName, newSeriesLanguage)
+			LOG.Printf("Creating new index entry for '%s' [%s] with %s as first episode\n",
+				seriesName, newSeriesLanguage, newSeriesFirstEpisode)
 
-			_, err := seriesIndex.AddSeries(seriesName, newSeriesLanguage)
+			_, err := seriesIndex.AddSeries(seriesName, newSeriesLanguage, season, episode-1)
 			if err != nil {
 				LOG.Printf(
 					"!!! Adding new index entry wasn't possible: %s\n", err)
@@ -149,6 +164,8 @@ var indexListCmd = &cobra.Command{
 func init() {
 	indexAddCmd.Flags().StringVarP(&newSeriesLanguage, "lang", "l", "de",
 		"language the series is watched in. (de/en/fr)")
+	indexAddCmd.Flags().StringVarP(&newSeriesFirstEpisode, "first-episode", "f", "S01E01",
+		"the first episode that you are interested in")
 
 	indexCmd.AddCommand(indexInitCmd, indexAddCmd, indexRemoveCmd, indexAliasCmd, indexListCmd)
 }
