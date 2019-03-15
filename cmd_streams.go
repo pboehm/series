@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
@@ -178,6 +179,10 @@ var streamsServerCmd = &cobra.Command{
 }
 
 func withIndexStreamsAndWatchedSeries(handler func(*idx.SeriesIndex, *str.Streams, []str.WatchedSeries)) {
+	if appConfig.StreamsAPIToken == "" {
+		HandleError(errors.New(fmt.Sprintf("`StreamsAPIToken` not configured in %s", configFile)))
+	}
+
 	callPreProcessingHook()
 	loadIndex()
 
