@@ -8,10 +8,6 @@ import (
 	"sort"
 )
 
-func BuildAbsoluteUrl(path string) string {
-	return fmt.Sprintf("https://s.to%s", path)
-}
-
 type Series struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
@@ -19,7 +15,7 @@ type Series struct {
 }
 
 func (s Series) AbsoluteLink() string {
-	return BuildAbsoluteUrl(fmt.Sprintf("/serie/stream/%s", s.Link))
+	return absoluteUrl(fmt.Sprintf("/serie/stream/%s", s.Link))
 }
 
 type Link struct {
@@ -86,7 +82,7 @@ func (s *Streams) AvailableSeries() []*Series {
 		"category": "0",
 	}
 
-	r, err := req.Get("https://s.to/api/v1/series/list", header, param)
+	r, err := req.Get(absoluteUrl("/api/v1/series/list"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -106,7 +102,7 @@ func (s *Streams) Seasons(series *Series) []int {
 		"series": series.Id,
 	}
 
-	r, err := req.Get("https://s.to/api/v1/series/get", header, param)
+	r, err := req.Get(absoluteUrl("/api/v1/series/get"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -129,7 +125,7 @@ func (s *Streams) Episodes(series *Series, season int) []*Episode {
 		"season": season,
 	}
 
-	r, err := req.Get("https://s.to/api/v1/series/get", header, param)
+	r, err := req.Get(absoluteUrl("/api/v1/series/get"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -141,5 +137,17 @@ func (s *Streams) Episodes(series *Series, season int) []*Episode {
 }
 
 func (s *Streams) LinkUrl(link *Link) string {
-	return BuildAbsoluteUrl(fmt.Sprintf("%s?key=%s", link.Link, s.Config.StreamsAPIToken))
+	return absoluteUrl(fmt.Sprintf("%s?key=%s", link.Link, s.Config.StreamsAPIToken))
+}
+
+func absoluteUrl(path string) string {
+	rev := func(s string) string {
+		r := []rune(s)
+		for i, j := 0, len(r)-1; i < len(r)/2; i, j = i+1, j-1 {
+			r[i], r[j] = r[j], r[i]
+		}
+		return string(r)
+	}
+
+	return fmt.Sprintf("%s%s", rev("ot.s//:sptth"), path)
 }
