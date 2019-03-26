@@ -53,7 +53,22 @@ func (l *LinkSet) GrabLinksFor(watched []WatchedSeries) {
 	}
 
 	sort.Slice(l.episodeLinks, func(i, j int) bool {
-		return l.episodeLinks[i].EpisodeId < l.episodeLinks[j].EpisodeId
+		iEntry := l.episodeLinks[i]
+		jEntry := l.episodeLinks[j]
+
+		if iEntry.Series != jEntry.Series {
+			return iEntry.Series < jEntry.Series
+		}
+
+		if iEntry.Season != jEntry.Season {
+			return iEntry.Season < jEntry.Season
+		}
+
+		if iEntry.Episode != jEntry.Episode {
+			return iEntry.Episode < jEntry.Episode
+		}
+
+		return iEntry.EpisodeId < jEntry.EpisodeId
 	})
 }
 
