@@ -9,6 +9,7 @@ import (
 )
 
 type LinkSetEntryLink struct {
+	Id     string `json:"id"`
 	Hoster string `json:"hoster"`
 	Link   string `json:"link"`
 }
@@ -108,21 +109,6 @@ func (l *LinkSet) grabLinksForSeries(series WatchedSeries, results chan []*LinkS
 }
 
 func (l *LinkSet) buildEntry(series WatchedSeries, language string, episode *Episode, links []*Link) *LinkSetEntry {
-	var entryLinks []*LinkSetEntryLink
-	for _, link := range links {
-		entryLinks = append(entryLinks, &LinkSetEntryLink{
-			Hoster: link.Hoster,
-			Link:   l.streams.LinkUrl(link),
-		})
-	}
-
-	// TODO replace by real hoster selection
-	sort.Slice(entryLinks[:], func(i, j int) bool {
-		return strings.Index(entryLinks[i].Hoster, "HD") > strings.Index(entryLinks[j].Hoster, "HD")
-	})
-
-	id, _ := NewIdentifier(series.SeriesNameInIndex, language, episode.Season, episode.Episode).AsString()
-
 	episodeName := ""
 	switch language {
 	case "de":
@@ -132,8 +118,27 @@ func (l *LinkSet) buildEntry(series WatchedSeries, language string, episode *Epi
 	default:
 	}
 
+	identifier := NewIdentifier(series.SeriesNameInIndex, language, episode.Season, episode.Episode, episodeName)
+
+	var entryLinks []*LinkSetEntryLink
+	for _, link := range links {
+		linkIdentifier, _ := NewLinkIdentifier(identifier, link.ID)
+		entryLinks = append(entryLinks, &LinkSetEntryLink{
+			Id:     linkIdentifier,
+			Hoster: link.Hoster,
+			Link:   l.streams.LinkUrl(link.ID),
+		})
+	}
+
+	// TODO replace by real hoster selection
+	sort.Slice(entryLinks[:], func(i, j int) bool {
+		return strings.Index(entryLinks[i].Hoster, "HD") > strings.Index(entryLinks[j].Hoster, "HD")
+	})
+
+	idString, _ := identifier.AsString()
+
 	return &LinkSetEntry{
-		Id:          id,
+		Id:          idString,
 		Series:      series.SeriesNameInIndex,
 		Language:    language,
 		Season:      episode.Season,

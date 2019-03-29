@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/pboehm/series/config"
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
@@ -113,6 +114,58 @@ var streamsMarkWatchedCmd = &cobra.Command{
 	},
 }
 
+var streamsRunActionCmd = &cobra.Command{
+	Use:   "run-action action linkId",
+	Short: "run link actions on the supplied link ids",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 2 {
+			cmd.Help()
+			return
+		}
+
+		actionId := args[0]
+		linkIdString := args[1]
+
+		var action = config.StreamAction{}
+		for _, a := range appConfig.StreamsLinkActions {
+			if a.Id == actionId {
+				action = a
+			}
+		}
+
+		if action.Id == "" {
+			HandleError(errors.New(fmt.Sprintf("action '%s' not found", actionId)))
+		}
+
+		withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
+			identifier, linkId, err := str.LinkIdentifierFromString(linkIdString)
+			HandleError(err)
+
+			runAction(streams, action, identifier, linkId)
+		})
+	},
+}
+
+func runAction(streams *str.Streams, action config.StreamAction, identifier *str.Identifier, linkId int) {
+	session, err := streams.Login(appConfig.StreamsAccountEmail, appConfig.StreamsAccountPassword)
+	HandleError(err)
+
+	videoUrl, err := streams.ResolveLink(linkId, session)
+	HandleError(err)
+
+	HandleError(System(action.Command, []string{
+		fmt.Sprintf("SERIES_SERIES=%s", identifier.Series),
+		fmt.Sprintf("SERIES_LANGUAGE=%s", identifier.Language),
+		fmt.Sprintf("SERIES_SEASON=%d", identifier.Season),
+		fmt.Sprintf("SERIES_EPISODE=%d", identifier.Episode),
+		fmt.Sprintf("SERIES_EPISODE_NAME=%s", identifier.EpisodeName),
+		fmt.Sprintf("SERIES_FILENAME=S%02dE%02d - %s.mov", identifier.Season, identifier.Episode, identifier.EpisodeName),
+		fmt.Sprintf("SERIES_LINK_ID=%d", linkId),
+		fmt.Sprintf("SERIES_REDIRECT_URL=%s", streams.LinkUrl(linkId)),
+		fmt.Sprintf("SERIES_VIDEO_URL=%s", videoUrl),
+	}))
+}
+
 var streamsServerOptionListen string
 var streamsServerOptionIndexHtml string
 
@@ -146,6 +199,7 @@ var streamsServerCmd = &cobra.Command{
 		go loadLinkSet()
 
 		api := str.API{
+			Config:         appConfig,
 			HtmlContent:    indexHtmlContent,
 			LinkSetRefresh: loadLinkSet,
 			LinkSet: func() *str.LinkSet {
@@ -183,10 +237,15 @@ func withIndexStreamsAndWatchedSeries(handler func(*idx.SeriesIndex, *str.Stream
 		HandleError(errors.New(fmt.Sprintf("`StreamsAPIToken` not configured in %s", configFile)))
 	}
 
+	if appConfig.StreamsAccountEmail == "" || appConfig.StreamsAccountPassword == "" {
+		HandleError(errors.New(fmt.Sprintf(
+			"`StreamsAccountEmail` or `StreamsAccountPassword` is not configured in %s", configFile)))
+	}
+
 	callPreProcessingHook()
 	loadIndex()
 
-	streams := &str.Streams{Config: appConfig}
+	streams := str.NewStreams(appConfig)
 	availableSeries := streams.AvailableSeries()
 
 	var watched []str.WatchedSeries
@@ -228,5 +287,5 @@ func init() {
 	streamsServerCmd.Flags().StringVarP(&streamsServerOptionListen, "listen", "l", ":8080", "where should the server listen")
 	streamsServerCmd.Flags().StringVarP(&streamsServerOptionIndexHtml, "index", "i", "", "a custom index.html that should be used")
 
-	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsMarkWatchedCmd, streamsServerCmd)
+	streamsCmd.AddCommand(streamsUnknownSeriesCmd, streamsFetchLinksCmd, streamsMarkWatchedCmd, streamsRunActionCmd, streamsServerCmd)
 }

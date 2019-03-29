@@ -8,11 +8,21 @@ import (
 	"path"
 )
 
+type StreamAction struct {
+	Id      string
+	Title   string
+	Command string
+}
+
 type Config struct {
 	IndexFile, PreProcessingHook, PostProcessingHook, EpisodeHook string
 	EpisodeDirectory                                              string
 	ScriptExtractors                                              []string
 	StreamsAPIToken                                               string
+	StreamsAccountEmail                                           string
+	StreamsAccountPassword                                        string
+	StreamsGlobalActions                                          []StreamAction
+	StreamsLinkActions                                            []StreamAction
 }
 
 func GetConfig(configFile string, standard Config) Config {

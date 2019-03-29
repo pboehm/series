@@ -8,9 +8,10 @@ import (
 
 // This executes the supplied cmd by /bin/sh and returns an error if it returns
 // unexpectedly
-func System(cmdString string) error {
+func System(cmdString string, extraEnviron []string) error {
 	cmd := exec.Command("/bin/sh", "-c", cmdString)
-	cmd.Stdout = os.Stdout
+	cmd.Env = append(os.Environ(), extraEnviron...)
+	cmd.Stdout = os.Stderr
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
@@ -19,7 +20,7 @@ func callPreProcessingHook() {
 	if appConfig.PreProcessingHook != "" {
 		LOG.Println("### Calling PreProcessingHook ...")
 
-		err := System(appConfig.PreProcessingHook)
+		err := System(appConfig.PreProcessingHook, []string{})
 		if err != nil {
 			LOG.Printf("PreProcessingHook ended with an error: %s\n", err)
 		}
@@ -30,7 +31,7 @@ func callPostProcessingHook() {
 	if appConfig.PostProcessingHook != "" {
 		LOG.Println("\n### Calling PostProcessingHook ...")
 
-		err := System(appConfig.PostProcessingHook)
+		err := System(appConfig.PostProcessingHook, []string{})
 		if err != nil {
 			LOG.Printf("PostProcessingHook ended with an error: %s\n", err)
 		}
@@ -44,7 +45,7 @@ func callEpisodeHook(episodePath, seriesName string) {
 		hookCmd := fmt.Sprintf("%s \"%s\" \"%s\"",
 			appConfig.EpisodeHook, episodePath, seriesName)
 
-		err := System(hookCmd)
+		err := System(hookCmd, []string{})
 		if err != nil {
 			LOG.Printf("EpisodeHook ended with an error: %s\n", err)
 		}

@@ -1,10 +1,12 @@
 package streams
 
 import (
+	"errors"
 	"fmt"
 	"github.com/imroc/req"
 	"github.com/pboehm/series/config"
 	"log"
+	"net/http"
 	"sort"
 )
 
@@ -68,8 +70,30 @@ type SeriesWithEpisodesResponse struct {
 	Episodes []*Episode `json:"episodes"`
 }
 
+type LoginResponse struct {
+	Avatar   string `json:"avatar"`
+	Session  string `json:"session"`
+	Success  bool   `json:"success"`
+	UID      int    `json:"uid"`
+	UserLink string `json:"userlink"`
+	Username string `json:"username"`
+}
+
 type Streams struct {
-	Config config.Config
+	Config   config.Config
+	requests *req.Req
+}
+
+func NewStreams(config config.Config) *Streams {
+	requests := req.New()
+	requests.Client().CheckRedirect = func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
+
+	return &Streams{
+		Config:   config,
+		requests: requests,
+	}
 }
 
 func (s *Streams) AvailableSeries() []*Series {
@@ -82,7 +106,7 @@ func (s *Streams) AvailableSeries() []*Series {
 		"category": "0",
 	}
 
-	r, err := req.Get(absoluteUrl("/api/v1/series/list"), header, param)
+	r, err := s.requests.Get(absoluteUrl("/api/v1/series/list"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -102,7 +126,7 @@ func (s *Streams) Seasons(series *Series) []int {
 		"series": series.Id,
 	}
 
-	r, err := req.Get(absoluteUrl("/api/v1/series/get"), header, param)
+	r, err := s.requests.Get(absoluteUrl("/api/v1/series/get"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,7 +149,7 @@ func (s *Streams) Episodes(series *Series, season int) []*Episode {
 		"season": season,
 	}
 
-	r, err := req.Get(absoluteUrl("/api/v1/series/get"), header, param)
+	r, err := s.requests.Get(absoluteUrl("/api/v1/series/get"), header, param)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -136,8 +160,45 @@ func (s *Streams) Episodes(series *Series, season int) []*Episode {
 	return parsedResponse.Episodes
 }
 
-func (s *Streams) LinkUrl(link *Link) string {
-	return absoluteUrl(fmt.Sprintf("%s?key=%s", link.Link, s.Config.StreamsAPIToken))
+func (s *Streams) Login(email string, password string) (string, error) {
+	body := req.Param{"email": email, "password": password}
+
+	url := absoluteUrl(fmt.Sprintf("/api/v1/account/login?key=%s", s.Config.StreamsAPIToken))
+	r, err := s.requests.Post(url, body)
+	if err != nil {
+		return "", err
+	}
+
+	var response LoginResponse
+	if err = r.ToJSON(&response); err != nil {
+		return "", err
+	}
+
+	return response.Session, nil
+}
+
+func (s *Streams) ResolveLink(linkId int, session string) (string, error) {
+	header := req.Header{
+		"Accept": "*/*",
+		"Cookie": fmt.Sprintf("SSTOSESSION=%s", session),
+	}
+
+	r, err := s.requests.Head(s.LinkUrl(linkId), header)
+	if err != nil {
+		return "", err
+	}
+
+	response := r.Response()
+	location := response.Header.Get("Location")
+	if response.StatusCode != 301 || location == "" {
+		return "", errors.New(fmt.Sprintf("could not resolve link: status=%d location=%s", response.StatusCode, location))
+	}
+
+	return location, nil
+}
+
+func (s *Streams) LinkUrl(linkId int) string {
+	return absoluteUrl(fmt.Sprintf("/api/v1/stream/%d?key=%s", linkId, s.Config.StreamsAPIToken))
 }
 
 func absoluteUrl(path string) string {

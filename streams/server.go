@@ -2,21 +2,29 @@ package streams
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/pboehm/series/config"
 	"sort"
 )
 
-type GroupedSeriesResponse struct {
+type groupedSeriesResponse struct {
 	Series   string          `json:"series"`
 	Episodes []*LinkSetEntry `json:"episodes"`
 }
 
+type definedActionResponse struct {
+	Id    string `json:"id"`
+	Title string `json:"title"`
+}
+
 type API struct {
+	Config         config.Config
 	HtmlContent    func() []byte
 	LinkSet        func() *LinkSet
 	LinkSetRefresh func()
 	MarkWatched    func([]string) ([]string, []string)
 }
 
+//noinspection ALL
 func (a *API) Run(listen string) error {
 	r := gin.Default()
 	r.GET("/", func(c *gin.Context) {
@@ -49,9 +57,9 @@ func (a *API) Run(listen string) error {
 		}
 
 		//noinspection GoPreferNilSlice
-		grouped := []GroupedSeriesResponse{}
+		grouped := []groupedSeriesResponse{}
 		for seriesName, entries := range entries {
-			grouped = append(grouped, GroupedSeriesResponse{
+			grouped = append(grouped, groupedSeriesResponse{
 				Series:   seriesName,
 				Episodes: entries,
 			})
@@ -93,6 +101,28 @@ func (a *API) Run(listen string) error {
 			"successes": successes,
 			"failures":  failures,
 		})
+	})
+	r.GET("/api/actions/global", func(c *gin.Context) {
+		definedActions := []definedActionResponse{}
+		for _, action := range a.Config.StreamsGlobalActions {
+			definedActions = append(definedActions, definedActionResponse{
+				Id:    action.Id,
+				Title: action.Title,
+			})
+		}
+
+		c.JSON(200, definedActions)
+	})
+	r.GET("/api/actions/link", func(c *gin.Context) {
+		definedActions := []definedActionResponse{}
+		for _, action := range a.Config.StreamsLinkActions {
+			definedActions = append(definedActions, definedActionResponse{
+				Id:    action.Id,
+				Title: action.Title,
+			})
+		}
+
+		c.JSON(200, definedActions)
 	})
 
 	return r.Run(listen)
