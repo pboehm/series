@@ -141,29 +141,34 @@ var streamsRunActionCmd = &cobra.Command{
 			identifier, linkId, err := str.LinkIdentifierFromString(linkIdString)
 			HandleError(err)
 
-			runAction(streams, action, identifier, linkId)
+			HandleError(runAction(streams, action, identifier, linkId))
 		})
 	},
 }
 
-func runAction(streams *str.Streams, action config.StreamAction, identifier *str.Identifier, linkId int) {
-	session, err := streams.Login(appConfig.StreamsAccountEmail, appConfig.StreamsAccountPassword)
-	HandleError(err)
+func runAction(streams *str.Streams, action config.StreamAction, id *str.Identifier, linkId int) error {
+	var err error
+	var session, videoUrl string
 
-	videoUrl, err := streams.ResolveLink(linkId, session)
-	HandleError(err)
+	if session, err = streams.Login(appConfig.StreamsAccountEmail, appConfig.StreamsAccountPassword); err != nil {
+		return err
+	}
 
-	HandleError(System(action.Command, []string{
-		fmt.Sprintf("SERIES_SERIES=%s", identifier.Series),
-		fmt.Sprintf("SERIES_LANGUAGE=%s", identifier.Language),
-		fmt.Sprintf("SERIES_SEASON=%d", identifier.Season),
-		fmt.Sprintf("SERIES_EPISODE=%d", identifier.Episode),
-		fmt.Sprintf("SERIES_EPISODE_NAME=%s", identifier.EpisodeName),
-		fmt.Sprintf("SERIES_FILENAME=S%02dE%02d - %s.mov", identifier.Season, identifier.Episode, identifier.EpisodeName),
+	if videoUrl, err = streams.ResolveLink(linkId, session); err != nil {
+		return err
+	}
+
+	return System(action.Command, []string{
+		fmt.Sprintf("SERIES_SERIES=%s", id.Series),
+		fmt.Sprintf("SERIES_LANGUAGE=%s", id.Language),
+		fmt.Sprintf("SERIES_SEASON=%d", id.Season),
+		fmt.Sprintf("SERIES_EPISODE=%d", id.Episode),
+		fmt.Sprintf("SERIES_EPISODE_NAME=%s", id.EpisodeName),
+		fmt.Sprintf("SERIES_FILENAME=S%02dE%02d - %s.mov", id.Season, id.Episode, id.EpisodeName),
 		fmt.Sprintf("SERIES_LINK_ID=%d", linkId),
 		fmt.Sprintf("SERIES_REDIRECT_URL=%s", streams.LinkUrl(linkId)),
 		fmt.Sprintf("SERIES_VIDEO_URL=%s", videoUrl),
-	}))
+	})
 }
 
 var streamsServerOptionListen string
@@ -187,12 +192,14 @@ var streamsServerCmd = &cobra.Command{
 		}
 
 		var currentLinkSet *str.LinkSet
+		var currentStreams *str.Streams
 
 		loadLinkSet := func() {
 			withIndexStreamsAndWatchedSeries(func(index *idx.SeriesIndex, streams *str.Streams, watched []str.WatchedSeries) {
 				linkSet := str.NewLinkSet(appConfig, streams, index)
 				linkSet.GrabLinksFor(watched)
 				currentLinkSet = linkSet
+				currentStreams = streams
 			})
 		}
 
@@ -200,6 +207,7 @@ var streamsServerCmd = &cobra.Command{
 
 		api := str.API{
 			Config:         appConfig,
+			Jobs:           str.NewJobPool(),
 			HtmlContent:    indexHtmlContent,
 			LinkSetRefresh: loadLinkSet,
 			LinkSet: func() *str.LinkSet {
@@ -226,6 +234,20 @@ var streamsServerCmd = &cobra.Command{
 				loadLinkSet()
 
 				return successes, failures
+			},
+			ExecuteLinkAction: func(action config.StreamAction, identifier *str.Identifier, i int) *str.Job {
+				return str.NewJob(func() error {
+					if currentStreams == nil {
+						return errors.New("streams not initialized")
+					}
+
+					return runAction(currentStreams, action, identifier, i)
+				})
+			},
+			ExecuteGlobalAction: func(action config.StreamAction) *str.Job {
+				return str.NewJob(func() error {
+					return System(action.Command, []string{})
+				})
 			},
 		}
 		HandleError(api.Run(streamsServerOptionListen))

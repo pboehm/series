@@ -17,11 +17,14 @@ type definedActionResponse struct {
 }
 
 type API struct {
-	Config         config.Config
-	HtmlContent    func() []byte
-	LinkSet        func() *LinkSet
-	LinkSetRefresh func()
-	MarkWatched    func([]string) ([]string, []string)
+	Config              config.Config
+	Jobs                *JobPool
+	HtmlContent         func() []byte
+	LinkSet             func() *LinkSet
+	LinkSetRefresh      func()
+	MarkWatched         func([]string) ([]string, []string)
+	ExecuteLinkAction   func(config.StreamAction, *Identifier, int) *Job
+	ExecuteGlobalAction func(config.StreamAction) *Job
 }
 
 //noinspection ALL
@@ -113,6 +116,27 @@ func (a *API) Run(listen string) error {
 
 		c.JSON(200, definedActions)
 	})
+	r.POST("/api/actions/global/:action", func(c *gin.Context) {
+		action := config.StreamAction{}
+		for _, a := range a.Config.StreamsGlobalActions {
+			if a.Id == c.Param("action") {
+				action = a
+			}
+		}
+
+		if action.Id == "" {
+			c.JSON(400, gin.H{
+				"error": "action not found",
+			})
+			return
+		}
+
+		job := a.ExecuteGlobalAction(action)
+		a.Jobs.Set(job.Id, job)
+		go job.Run()
+
+		c.JSON(200, job)
+	})
 	r.GET("/api/actions/link", func(c *gin.Context) {
 		definedActions := []definedActionResponse{}
 		for _, action := range a.Config.StreamsLinkActions {
@@ -123,6 +147,45 @@ func (a *API) Run(listen string) error {
 		}
 
 		c.JSON(200, definedActions)
+	})
+	r.POST("/api/actions/link/:action/:linkId", func(c *gin.Context) {
+		action := config.StreamAction{}
+		for _, a := range a.Config.StreamsLinkActions {
+			if a.Id == c.Param("action") {
+				action = a
+			}
+		}
+
+		if action.Id == "" {
+			c.JSON(400, gin.H{
+				"error": "action not found",
+			})
+			return
+		}
+
+		identifier, linkId, err := LinkIdentifierFromString(c.Param("linkId"))
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		job := a.ExecuteLinkAction(action, identifier, linkId)
+		a.Jobs.Set(job.Id, job)
+		go job.Run()
+
+		c.JSON(200, job)
+	})
+	r.GET("/api/actions/job/:job", func(c *gin.Context) {
+		job, ok := a.Jobs.Get(c.Param("job"))
+		if ok {
+			c.JSON(200, job)
+		} else {
+			c.JSON(400, gin.H{
+				"error": "job not found",
+			})
+		}
 	})
 
 	return r.Run(listen)
