@@ -34,18 +34,29 @@ var ServerStaticHtml = `
 
         .container {
             padding-top: 10px;
+            width: 95%;
         }
 
-        .container .collection.with-header .collection-header {
-            padding: 10px 15px;
+        .container .collapsible .collapsible-header {
+            align-items: center;
         }
 
-        .container .collection.with-header .collection-header h5 {
-            margin: 0;
+        .container .collapsible .collapsible-header .series-title {
+            display: flex;
+            flex-grow: 1;
+            font-weight: bold;
         }
 
-        .container .collection.with-header .collection-item {
-            padding: 10px 15px;
+        .container .collapsible .collapsible-header .episode-count {
+            padding-left: 10px;
+        }
+
+        .container .collapsible .collapsible-body {
+            padding: 0;
+        }
+
+        .container .collection .collection-item {
+            padding: 15px;
         }
 
         .container .collection-item .top {
@@ -60,9 +71,11 @@ var ServerStaticHtml = `
         }
 
         .container .collection-item .bottom {
-            overflow-x: scroll;
-            white-space: nowrap;
-            padding-top: 15px;
+            padding-top: 10px;
+        }
+
+        .container .collection-item .bottom .buttons button {
+            margin-top: 10px;
         }
 
     </style>
@@ -92,35 +105,60 @@ var ServerStaticHtml = `
 
 <script id="template-series" type="x-tmpl-mustache">
     [[#groups]]
-    <ul class="collection with-header">
-        <li class="collection-header"><h5>[[ series ]]</h5></li>
-        [[#episodes]]
-        <li class="collection-item">
-            <div class="top">
-                <div class="title">[[ filename ]]</div>
-                <div class="action">
-                       <label>
-                        <input type="checkbox" class="watched-checkbox filled-in" [[#watched]]checked[[/watched]] name="[[ id ]]"/>
-                        <span></span>
-                      </label>
-                </div>
+    <ul class="collapsible">
+        <li>
+            <div class="collapsible-header">
+                <div class="series-title"><i class="material-icons">live_tv</i>[[ series ]]</div>
+                <div class="episode-count">[[ episodes.length ]]</div>
             </div>
-            <div class="bottom" >
-                [[#links]]
-                <button data-link="[[ link ]]" data-episode-id="[[ episodeId ]]"
-                    class="link-button grey waves-effect waves-light btn-small">[[ hoster ]]</button>
-                [[/links]]
+            <div class="collapsible-body">
+
+                <ul class="collection">
+                    [[#episodes]]
+                    <li class="collection-item">
+                        <div class="top">
+                            <div class="title">[[ filename ]]</div>
+                            <div class="action">
+                                 <label>
+                                  <input type="checkbox" class="watched-checkbox filled-in" [[#watched]]checked[[/watched]] name="[[ id ]]"/>
+                                  <span></span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="bottom">
+                            <div class="hoster">
+                                <select id="select-[[ __id ]]">
+                                    [[#links]]
+                                    <option value="[[ id ]]" data-link="[[ link ]]">[[ hoster ]]</option>
+                                    [[/links]]
+                                </select>
+                            </div>
+                            <div class="buttons">
+                                <button data-episode-id="[[ __id ]]"
+                                    class="link-button grey waves-effect waves-light btn-small">Open</button>
+
+                                [[#linkActions]]
+                                    <button class="link-action-button grey waves-effect waves-light btn-small"
+                                        data-episode-id="[[ __id ]]" data-action="[[ id ]]">[[ title ]]</button>
+                                [[/linkActions]]
+                            </div>
+                        </div>
+                    </li>
+                    [[/episodes]]
+                </ul>
             </div>
         </li>
-        [[/episodes]]
     </ul>
     [[/groups]]
-
-
 </script>
 
 <script>
     var watchedEpisodes = (!!window.localStorage) ? window.localStorage : {};
+    var appState = {
+        groups: [],
+        linkActions: [],
+        globalActions: []
+    };
 
     function hasEpisodeBeenWatched(episodeId) {
         return !!watchedEpisodes[episodeId];
@@ -144,6 +182,27 @@ var ServerStaticHtml = `
         }
     }
 
+    function callLinkAction(button, action, linkId) {
+        var originalText = button.textContent;
+
+        button.text = originalText.replace(/./g, ".");
+        button.classList.add("disabled");
+
+        fetch("/api/actions/link/" + action + "/" + linkId, {"method": "POST"})
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (success) {
+                console.log(success);
+                button.textContent = originalText;
+                button.classList.remove("disabled");
+            }, function (error) {
+                console.log(error);
+                button.textContent = originalText;
+                button.classList.remove("disabled");
+            });
+    }
+
     function registerHandlers() {
         $(".watched-checkbox").click(function(e) {
             if (this.checked) {
@@ -161,18 +220,46 @@ var ServerStaticHtml = `
             $(".watched-checkbox[name=" + episodeId + "]").attr('checked', true);
             manageMarkWatchedButton();
 
-            window.open(this.dataset.link, '_blank');
+            var link = $("#select-" + episodeId + " :selected").data("link");
+            window.open(link, '_blank');
+        });
+
+        $(".link-action-button").click(function(e) {
+            var episodeId = this.dataset.episodeId;
+            markEpisodeAsWatched(episodeId);
+            $(".watched-checkbox[name=" + episodeId + "]").attr('checked', true);
+            manageMarkWatchedButton();
+
+            var action = this.dataset.action;
+            var linkId = $("#select-" + episodeId + " :selected").attr("value");
+            callLinkAction(this, action, linkId);
         });
     }
 
-    function renderLinks(groups) {
+    function renderState() {
         var template = $('#template-series').html();
         Mustache.parse(template);
-        var rendered = Mustache.render(template, {groups: groups}, null, ['[[', ']]']);
+        var rendered = Mustache.render(template, appState, null, ['[[', ']]']);
         $('#series-container').html(rendered);
 
         registerHandlers();
         manageMarkWatchedButton();
+
+        $('.collapsible').collapsible();
+        $('select').formSelect();
+    }
+
+    function loadActions() {
+        var linked = fetch("/api/actions/link").then(function (response) { return response.json() });
+        var global = fetch("/api/actions/global").then(function (response) { return response.json() });
+
+        Promise.all([linked, global]).then(function (successes) {
+            appState.linkActions = successes[0];
+            appState.globalActions = successes[1];
+            renderState();
+        }, function (error) {
+            console.log(error);
+        });
     }
 
     function loadLinks() {
@@ -190,10 +277,10 @@ var ServerStaticHtml = `
             }
 
             var groups = success.links;
-
             groups.forEach(function (group) {
                 var episodes = group["episodes"];
                 episodes.forEach(function (episode) {
+                    episode["__id"] = episode["id"];
                     episode["watched"] = hasEpisodeBeenWatched(episode["id"]);
 
                     episode["links"].forEach(function (link) {
@@ -202,7 +289,9 @@ var ServerStaticHtml = `
                 });
             });
 
-            renderLinks(groups)
+            appState.groups = groups;
+
+            renderState();
         }, function (error) {
             console.log(error);
         });
@@ -265,6 +354,7 @@ var ServerStaticHtml = `
             markAsWatchedInBackend(this);
         });
 
+        loadActions();
         loadLinks();
     })();
 </script>
