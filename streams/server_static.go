@@ -37,6 +37,14 @@ var ServerStaticHtml = `
             width: 95%;
         }
 
+        .container .global-actions {
+            text-align: center;
+        }
+
+        .container .global-actions button {
+            margin-bottom: 10px;
+        }
+
         .container .collapsible .collapsible-header {
             align-items: center;
         }
@@ -104,6 +112,15 @@ var ServerStaticHtml = `
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/3.0.1/mustache.min.js"></script>
 
 <script id="template-series" type="x-tmpl-mustache">
+
+<div class="global-actions">
+    [[#globalActions]]
+        <button class="global-action-button grey waves-effect waves-light btn-small"
+            data-action="[[ id ]]">[[ title ]]</button>
+    [[/globalActions]]
+</div>
+
+<div class="series">
     [[#groups]]
     <ul class="collapsible">
         <li>
@@ -150,6 +167,7 @@ var ServerStaticHtml = `
         </li>
     </ul>
     [[/groups]]
+</div>
 </script>
 
 <script>
@@ -203,6 +221,27 @@ var ServerStaticHtml = `
             });
     }
 
+    function callGlobalAction(button, action) {
+        var originalText = button.textContent;
+
+        button.text = originalText.replace(/./g, ".");
+        button.classList.add("disabled");
+
+        fetch("/api/actions/global/" + action, {"method": "POST"})
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (success) {
+                    console.log(success);
+                    button.textContent = originalText;
+                    button.classList.remove("disabled");
+                }, function (error) {
+                    console.log(error);
+                    button.textContent = originalText;
+                    button.classList.remove("disabled");
+                });
+    }
+
     function registerHandlers() {
         $(".watched-checkbox").click(function(e) {
             if (this.checked) {
@@ -247,6 +286,10 @@ var ServerStaticHtml = `
 
         $('.collapsible').collapsible();
         $('select').formSelect();
+
+        $(".global-action-button").click(function() {
+            callGlobalAction(this, this.dataset.action);
+        });
     }
 
     function loadActions() {
