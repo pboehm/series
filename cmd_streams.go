@@ -8,7 +8,9 @@ import (
 	idx "github.com/pboehm/series/index"
 	str "github.com/pboehm/series/streams"
 	"github.com/spf13/cobra"
+	"io"
 	"io/ioutil"
+	"os"
 )
 
 var streamsCmdJsonOutput = false
@@ -141,12 +143,12 @@ var streamsRunActionCmd = &cobra.Command{
 			identifier, linkId, err := str.LinkIdentifierFromString(linkIdString)
 			HandleError(err)
 
-			HandleError(runAction(streams, action, identifier, linkId))
+			HandleError(runAction(os.Stderr, streams, action, identifier, linkId))
 		})
 	},
 }
 
-func runAction(streams *str.Streams, action config.StreamAction, id *str.Identifier, linkId int) error {
+func runAction(output io.Writer, streams *str.Streams, action config.StreamAction, id *str.Identifier, linkId int) error {
 	var err error
 	var session, videoUrl string
 
@@ -158,7 +160,7 @@ func runAction(streams *str.Streams, action config.StreamAction, id *str.Identif
 		return err
 	}
 
-	return System(action.Command, []string{
+	return SystemV(action.Command, []string{
 		fmt.Sprintf("SERIES_SERIES=%s", id.Series),
 		fmt.Sprintf("SERIES_LANGUAGE=%s", id.Language),
 		fmt.Sprintf("SERIES_SEASON=%d", id.Season),
@@ -168,7 +170,7 @@ func runAction(streams *str.Streams, action config.StreamAction, id *str.Identif
 		fmt.Sprintf("SERIES_LINK_ID=%d", linkId),
 		fmt.Sprintf("SERIES_REDIRECT_URL=%s", streams.LinkUrl(linkId)),
 		fmt.Sprintf("SERIES_VIDEO_URL=%s", videoUrl),
-	})
+	}, output, output)
 }
 
 var streamsServerOptionListen string
@@ -236,17 +238,20 @@ var streamsServerCmd = &cobra.Command{
 				return successes, failures
 			},
 			ExecuteLinkAction: func(action config.StreamAction, identifier *str.Identifier, i int) *str.Job {
-				return str.NewJob(func() error {
+				return str.NewJob(func(output io.Writer) error {
+					multiWriter := io.MultiWriter(output, os.Stderr)
+
 					if currentStreams == nil {
 						return errors.New("streams not initialized")
 					}
 
-					return runAction(currentStreams, action, identifier, i)
+					return runAction(multiWriter, currentStreams, action, identifier, i)
 				})
 			},
 			ExecuteGlobalAction: func(action config.StreamAction) *str.Job {
-				return str.NewJob(func() error {
-					return System(action.Command, []string{})
+				return str.NewJob(func(output io.Writer) error {
+					multiWriter := io.MultiWriter(output, os.Stderr)
+					return SystemV(action.Command, []string{}, multiWriter, multiWriter)
 				})
 			},
 		}

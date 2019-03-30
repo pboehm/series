@@ -1,11 +1,13 @@
 package streams
 
 import (
+	"bytes"
 	"github.com/satori/go.uuid"
+	"io"
 	"sync"
 )
 
-type Runnable func() error
+type Runnable func(io.Writer) error
 
 type Job struct {
 	Id       string `json:"id"`
@@ -13,6 +15,7 @@ type Job struct {
 	Finished bool   `json:"finished"`
 	Error    error  `json:"error"`
 	runnable Runnable
+	buffer   *bytes.Buffer
 }
 
 func NewJob(runnable Runnable) *Job {
@@ -21,6 +24,7 @@ func NewJob(runnable Runnable) *Job {
 		Finished: false,
 		Error:    nil,
 		runnable: runnable,
+		buffer:   &bytes.Buffer{},
 	}
 }
 
@@ -30,9 +34,30 @@ func (j *Job) Run() {
 	}
 
 	j.Running = true
-	j.Error = j.runnable()
+	j.Error = j.runnable(j.buffer)
 	j.Running = false
 	j.Finished = true
+}
+
+func (j *Job) Response() map[string]interface{} {
+	var success, failure, err interface{} = nil, nil, nil
+	if j.Finished {
+		success = j.Error == nil
+		failure = j.Error != nil
+	}
+	if j.Error != nil {
+		err = j.Error.Error()
+	}
+
+	return map[string]interface{}{
+		"id":       j.Id,
+		"running":  j.Running,
+		"finished": j.Finished,
+		"success":  success,
+		"failure":  failure,
+		"error":    err,
+		"output":   j.buffer.String(),
+	}
 }
 
 type JobPool struct {

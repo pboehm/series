@@ -135,7 +135,7 @@ func (a *API) Run(listen string) error {
 		a.Jobs.Set(job.Id, job)
 		go job.Run()
 
-		c.JSON(200, job)
+		c.JSON(200, job.Response())
 	})
 	r.GET("/api/actions/link", func(c *gin.Context) {
 		definedActions := []definedActionResponse{}
@@ -175,12 +175,12 @@ func (a *API) Run(listen string) error {
 		a.Jobs.Set(job.Id, job)
 		go job.Run()
 
-		c.JSON(200, job)
+		c.JSON(200, job.Response())
 	})
 	r.GET("/api/actions/job/:job", func(c *gin.Context) {
 		job, ok := a.Jobs.Get(c.Param("job"))
 		if ok {
-			c.JSON(200, job)
+			c.JSON(200, job.Response())
 		} else {
 			c.JSON(400, gin.H{
 				"error": "job not found",
