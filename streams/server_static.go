@@ -86,6 +86,10 @@ var ServerStaticHtml = `
             margin-top: 10px;
         }
 
+        .container .collection-item .bottom .buttons .job-buttons button {
+            margin-right: 5px;
+        }
+
     </style>
 </head>
 
@@ -104,6 +108,10 @@ var ServerStaticHtml = `
 </div>
 
 <div class="container" id="series-container">
+
+</div>
+
+<div id="job-dialog-container">
 
 </div>
 
@@ -158,6 +166,8 @@ var ServerStaticHtml = `
                                     <button class="link-action-button grey waves-effect waves-light btn-small"
                                         data-episode-id="[[ __id ]]" data-action="[[ id ]]">[[ title ]]</button>
                                 [[/linkActions]]
+
+                                <span class="job-buttons" id="jobs-[[ __id ]]"></span>
                             </div>
                         </div>
                     </li>
@@ -168,6 +178,20 @@ var ServerStaticHtml = `
     </ul>
     [[/groups]]
 </div>
+</script>
+
+<script id="template-job-dialog" type="x-tmpl-mustache">
+  <div id="dialog-[[ jobId ]]" class="modal">
+    <div class="modal-content">
+      <h4>Job <small class="status" style="color: gray"></small></h4>
+      <div class="pre-wrapper" style="height: 200px; overflow-y: scroll;">
+          <pre class="output"></pre>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Close</a>
+    </div>
+  </div>
 </script>
 
 <script>
@@ -200,25 +224,66 @@ var ServerStaticHtml = `
         }
     }
 
+    function addJobDialog(jobId) {
+        var template = $('#template-job-dialog').html();
+        Mustache.parse(template);
+        var rendered = Mustache.render(template, {jobId: jobId}, null, ['[[', ']]']);
+        $('#job-dialog-container').append(rendered);
+
+        var dialogId = "dialog-" + jobId;
+        $("#" + dialogId).modal();
+        return dialogId;
+    }
+
+    function checkJobStatus(jobId, dialogId) {
+        fetch("/api/actions/job/" + jobId).then(function (response) {
+            return response.json();
+        }).then(function (success) {
+            var dialog = $("#" + dialogId);
+
+            $(".status", dialog).html((success.running) ? "running" : (success.success) ? "success" : "failure");
+            $(".output", dialog).html((!success.failure) ? success.output : success.error);
+
+            var wrapper = $('.pre-wrapper', dialog)[0];
+            wrapper.scrollTop = wrapper.scrollHeight;
+
+            if (!success.finished) {
+                setTimeout(function () {
+                    checkJobStatus(jobId, dialogId)
+                }, 1000);
+            }
+        }, function (error) {
+            console.log(error);
+        });
+    }
+
     function callLinkAction(button, action, linkId) {
+        var episodeId = button.dataset.episodeId;
         var originalText = button.textContent;
 
         button.text = originalText.replace(/./g, ".");
         button.classList.add("disabled");
 
         fetch("/api/actions/link/" + action + "/" + linkId, {"method": "POST"})
-            .then(function (response) {
-                return response.json();
-            })
-            .then(function (success) {
-                console.log(success);
-                button.textContent = originalText;
-                button.classList.remove("disabled");
-            }, function (error) {
-                console.log(error);
-                button.textContent = originalText;
-                button.classList.remove("disabled");
-            });
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (success) {
+                    var jobId = success.id;
+                    var dialogId = addJobDialog(jobId);
+                    checkJobStatus(jobId, dialogId);
+
+                    var btn = "<button data-target=\"" + dialogId + "\" class=\"btn btn-small btn-floating modal-trigger grey waves-effect waves-light\">" +
+                            "<i class=\"material-icons\">access_time</i></button>";
+                    $("#jobs-" + episodeId).append(btn);
+
+                    button.textContent = originalText;
+                    button.classList.remove("disabled");
+                }, function (error) {
+                    console.log(error);
+                    button.textContent = originalText;
+                    button.classList.remove("disabled");
+                });
     }
 
     function callGlobalAction(button, action) {
