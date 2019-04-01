@@ -2,7 +2,7 @@ package streams
 
 import (
 	"bytes"
-	"github.com/satori/go.uuid"
+	"github.com/gofrs/uuid"
 	"io"
 	"sync"
 )
@@ -20,7 +20,7 @@ type Job struct {
 
 func NewJob(runnable Runnable) *Job {
 	return &Job{
-		Id:       uuid.NewV4().String(),
+		Id:       uuid.Must(uuid.NewV4()).String(),
 		Finished: false,
 		Error:    nil,
 		runnable: runnable,
