@@ -118,7 +118,8 @@ func (l *LinkSet) buildEntry(series WatchedSeries, language string, episode *Epi
 	default:
 	}
 
-	identifier := NewIdentifier(series.SeriesNameInIndex, language, episode.Season, episode.Episode, episodeName)
+	identifier := NewIdentifier(series.SeriesNameInIndex, series.Series.Link, series.Series.Id, language,
+		episode.Season, episode.Episode, episodeName)
 
 	var entryLinks []*LinkSetEntryLink
 	for _, link := range links {

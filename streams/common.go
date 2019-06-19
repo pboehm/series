@@ -17,6 +17,8 @@ type WatchedSeries struct {
 
 type Identifier struct {
 	Series      string `json:"series"`
+	SeriesSlug  string `json:"series_slug"`
+	SeriesId    int    `json:"series_id"`
 	Language    string `json:"language"`
 	Season      int    `json:"season"`
 	Episode     int    `json:"episode"`
@@ -32,8 +34,8 @@ func (i *Identifier) AsString() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(bytes), nil
 }
 
-func NewIdentifier(series string, language string, season int, episode int, name string) *Identifier {
-	return &Identifier{Series: series, Language: language, Season: season, Episode: episode, EpisodeName: name}
+func NewIdentifier(series string, seriesSlug string, seriesId int, language string, season int, episode int, name string) *Identifier {
+	return &Identifier{Series: series, SeriesSlug: seriesSlug, SeriesId: seriesId, Language: language, Season: season, Episode: episode, EpisodeName: name}
 }
 
 func IdentifierFromString(id string) (*Identifier, error) {

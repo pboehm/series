@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pboehm/series/config"
 	"sort"
+	"strconv"
 )
 
 type groupedSeriesResponse struct {
@@ -25,6 +26,7 @@ type API struct {
 	MarkWatched         func([]string) ([]string, []string)
 	ExecuteLinkAction   func(config.StreamAction, *Identifier, int) *Job
 	ExecuteGlobalAction func(config.StreamAction) *Job
+	ResolveLink         func(linkId int) (string, error)
 }
 
 //noinspection ALL
@@ -104,6 +106,28 @@ func (a *API) Run(listen string) error {
 			"successes": successes,
 			"failures":  failures,
 		})
+	})
+	r.POST("/api/link/resolve/:linkId", func(c *gin.Context) {
+		linkId, err := strconv.Atoi(c.Param("linkId"))
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		link, err := a.ResolveLink(linkId)
+		if err != nil {
+			c.JSON(400, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(200, gin.H{
+			"videoUrl": link,
+		})
+
 	})
 	r.GET("/api/actions/global", func(c *gin.Context) {
 		definedActions := []definedActionResponse{}

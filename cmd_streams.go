@@ -162,6 +162,8 @@ func runAction(output io.Writer, streams *str.Streams, action config.StreamActio
 
 	return SystemV(action.Command, []string{
 		fmt.Sprintf("SERIES_SERIES=%s", id.Series),
+		fmt.Sprintf("SERIES_SERIES_SLUG=%s", id.SeriesSlug),
+		fmt.Sprintf("SERIES_SERIES_ID=%d", id.SeriesId),
 		fmt.Sprintf("SERIES_LANGUAGE=%s", id.Language),
 		fmt.Sprintf("SERIES_SEASON=%d", id.Season),
 		fmt.Sprintf("SERIES_EPISODE=%d", id.Episode),
@@ -170,6 +172,9 @@ func runAction(output io.Writer, streams *str.Streams, action config.StreamActio
 		fmt.Sprintf("SERIES_LINK_ID=%d", linkId),
 		fmt.Sprintf("SERIES_REDIRECT_URL=%s", streams.LinkUrl(linkId)),
 		fmt.Sprintf("SERIES_VIDEO_URL=%s", videoUrl),
+		fmt.Sprintf("SERIES_SESSION=%s", session),
+		fmt.Sprintf("SERIES_API_TOKEN=%s", streams.Config.StreamsAPIToken),
+		fmt.Sprintf("SERIES_CONFIG_FILE=%s", configFile),
 	}, output, output)
 }
 
@@ -253,6 +258,24 @@ var streamsServerCmd = &cobra.Command{
 					multiWriter := io.MultiWriter(output, os.Stderr)
 					return SystemV(action.Command, []string{}, multiWriter, multiWriter)
 				})
+			},
+			ResolveLink: func(linkId int) (string, error) {
+				var session, videoUrl string
+				var err error
+
+				if currentStreams == nil {
+					return "", errors.New("streams not initialized")
+				}
+
+				if session, err = currentStreams.Login(appConfig.StreamsAccountEmail, appConfig.StreamsAccountPassword); err != nil {
+					return "", err
+				}
+
+				if videoUrl, err = currentStreams.ResolveLink(linkId, session); err != nil {
+					return "", err
+				}
+
+				return videoUrl, nil
 			},
 		}
 		HandleError(api.Run(streamsServerOptionListen))
